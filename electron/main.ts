@@ -11,8 +11,10 @@ import { execFile as nodeExecFile, type ChildProcess } from "node:child_process"
 import { fileURLToPath } from "node:url";
 import {
   signCoverUrl,
+  signRequest,
   signMonitorRequest,
   signRawPayload,
+  setDevSigningSecret,
   syncServerTime,
   getServerTimeOffset,
   type SignRequestInput,
@@ -345,6 +347,11 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    if (!app.isPackaged && process.env.LINER_DEV_SIGNING_SECRET) {
+      setDevSigningSecret(process.env.LINER_DEV_SIGNING_SECRET);
+      console.log("\x1b[43;30m signer \x1b[0m dev signing secret active (unpackaged build only)");
+    }
+
     // register liner:// so browsers / xdg-open route share links to us
     // (on linux the packaged .desktop carries the mime handler too)
     if (process.defaultApp && process.argv.length >= 2) {
@@ -889,6 +896,18 @@ if (!gotTheLock) {
         return payload;
       }
     });
+
+    ipcMain.handle(
+      "signer:sign-request",
+      (_event, request: SignRequestInput) => {
+        try {
+          return signRequest(request);
+        } catch (err: any) {
+          console.error("\x1b[41;37m signer \x1b[0m signRequest error:", err);
+          return { error: String(err?.message || err) };
+        }
+      },
+    );
 
     ipcMain.handle(
       "signer:sign-monitor-request",
