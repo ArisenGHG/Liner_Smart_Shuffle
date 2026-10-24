@@ -13,6 +13,32 @@ export interface WindowControlsProps {
   bare?: boolean;
 }
 
+// the window goes away right under the cursor (minimize / into the overlay), so
+// chromium never sees the pointer leave and the button keeps its hover look when the
+// window comes back. while this flag is on the control buttons drop their hover
+// highlight; it clears on the first real mouse move after the window is back.
+function suppressStaleHover() {
+  const root = document.documentElement;
+  root.setAttribute("data-hover-reset", "");
+  (document.activeElement as HTMLElement | null)?.blur?.();
+  let wentAway = false;
+  const clear = () => root.removeAttribute("data-hover-reset");
+  const onAway = () => {
+    wentAway = true;
+  };
+  const onBack = () => {
+    if (!wentAway) return;
+    window.removeEventListener("blur", onAway);
+    window.removeEventListener("focus", onBack);
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pointermove", clear, { once: true });
+  };
+  const onVisibility = () => (document.hidden ? onAway() : onBack());
+  window.addEventListener("blur", onAway);
+  window.addEventListener("focus", onBack);
+  document.addEventListener("visibilitychange", onVisibility);
+}
+
 export default function WindowControls({
   className = "",
   style,
@@ -21,7 +47,7 @@ export default function WindowControls({
   isFullscreen = false,
 }: WindowControlsProps) {
   const { t } = useTranslation();
-  const { isWindowFullScreen, isWindowMaximized } = useWindowState();
+  const { isFullScreen: isWindowFullScreen, isMaximized: isWindowMaximized } = useWindowState();
 
   const isHyprland = window.linerElectron?.isHyprland ?? false;
   const isMinimizeDisabled = isWindowFullScreen || isHyprland;
@@ -29,6 +55,7 @@ export default function WindowControls({
   const handleMinimize = () => {
     // macos fullscreen spaces and hyprland tiling wm prohibit/ignore minimizing
     if (isWindowFullScreen || isHyprland) return;
+    suppressStaleHover();
     useWindowAnimationStore.getState().triggerMinimize();
   };
 
@@ -103,6 +130,7 @@ export default function WindowControls({
   const capsule = (
     <div
       data-no-window-drag
+      data-window-controls
       data-no-tooltip="true"
       className={cn(
         "flex items-center gap-[2px] select-none pointer-events-auto",

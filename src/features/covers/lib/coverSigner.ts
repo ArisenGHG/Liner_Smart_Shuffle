@@ -1,4 +1,4 @@
-import { YOUTUBE_THUMBNAIL_HOST } from "@/shared/youtube";
+import { YOUTUBE_THUMBNAIL_HOST } from "@/shared/youtube/playlist/youtubeUrl";
 
 // client-side cover proxy url minting and signing
 // derives covers.tryliner.fun fallback url directly from track raw cover url

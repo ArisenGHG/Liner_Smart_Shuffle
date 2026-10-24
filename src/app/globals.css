@@ -480,3 +480,11 @@ button.apple-glass-action:hover,
   animation: none;
   mix-blend-mode: normal;
 }
+
+body[data-edge-to-edge="true"] {
+  padding: 0 !important;
+}
+
+html[data-hover-reset] [data-window-controls] button:hover {
+  background-color: transparent !important;
+}

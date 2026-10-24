@@ -1,5 +1,6 @@
-import { useCallback, useEffect, createElement, useRef } from "react";
+import { useCallback, useEffect, createElement, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { shouldReleaseTopPin, startsPinnedToTop } from "./lyricsTopPin";
 import { usePlayerState } from "../hooks/usePlayerState";
 import { playerEngine } from "../engine/playerEngine";
 import {
@@ -19,6 +20,7 @@ import KawarpWrapper from "./KawarpWrapper";
 import { useTranslation } from "@/languages";
 
 const BRACCATO_TAG = "braccato-lyrics";
+const KAWARP_FADE_IN_MS = 600;
 
 interface BraccatoLyricsViewProps {
   lyrics: any[];
@@ -32,6 +34,7 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
   const lastWheelTimeRef = useRef(0);
   const isInFreeSearchRef = useRef(false);
   const waitingForAudioAfterClickRef = useRef(false);
+  const pinnedToTopRef = useRef(startsPinnedToTop(player.status, player.positionMs));
 
   const scrollToActiveLine = useCallback(
     (behavior: ScrollBehavior = "smooth") => {
@@ -93,6 +96,7 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
   returnToFollowingModeRef.current = returnToFollowingMode;
 
   const handleUserInteraction = useCallback(() => {
+    pinnedToTopRef.current = false;
     lastWheelTimeRef.current = Date.now();
     isInFreeSearchRef.current = true;
 
@@ -257,7 +261,7 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
     let attempts = 0;
 
     const checkAndScroll = () => {
-      if (cancelled || waitingForAudioAfterClickRef.current) return;
+      if (cancelled || waitingForAudioAfterClickRef.current || pinnedToTopRef.current) return;
       attempts++;
       const success = scrollToActiveLine("auto");
       if (!success && attempts < 30) {
@@ -271,6 +275,35 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
       cancelAnimationFrame(rafId);
     };
   }, [lyrics, scrollToActiveLine]);
+
+  useEffect(() => {
+    if (!pinnedToTopRef.current) return;
+    const startedAt = performance.now();
+    let rafId = 0;
+    const holdTop = () => {
+      const el = elementRef.current as HTMLElement & { renderer?: { noteUserScroll?: () => void; resumeAutoscroll?: () => void } };
+      if (!pinnedToTopRef.current) return;
+      const audio = document.getElementById("liner-audio") as HTMLAudioElement | null;
+      const release = shouldReleaseTopPin({
+        status: playerEngine.getSnapshot().status,
+        audioPaused: !audio || audio.paused,
+        audioTimeMs: (audio?.currentTime ?? 0) * 1000,
+        pinnedForMs: performance.now() - startedAt,
+      });
+      if (release) {
+        pinnedToTopRef.current = false;
+        el?.renderer?.resumeAutoscroll?.();
+        return;
+      }
+      if (el) {
+        el.renderer?.noteUserScroll?.();
+        if (el.scrollTop !== 0) el.scrollTop = 0;
+      }
+      rafId = requestAnimationFrame(holdTop);
+    };
+    rafId = requestAnimationFrame(holdTop);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   return (
     <div className="relative flex flex-col flex-1 w-full h-full min-h-0">
@@ -322,6 +355,11 @@ export function FullscreenPlayer({
     console.error("kawarp load error:", err);
   }, []);
 
+  const [kawarpShown, setKawarpShown] = useState(false);
+  const onKawarpLoad = useCallback(() => {
+    setTimeout(() => setKawarpShown(true), KAWARP_FADE_IN_MS);
+  }, []);
+
   const nextCoverUrl = player.queue[player.currentIndex + 1]?.coverUrl;
   useEffect(() => {
     void preloadCoverArt(coverUrl);
@@ -352,14 +390,14 @@ export function FullscreenPlayer({
           className="absolute inset-0"
           style={{ backgroundColor: "var(--color-bg-primary)" }}
         />
-        {kawarpSrc && (
+        {kawarpSrc && !kawarpShown && (
           <div
             className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 opacity-70 pointer-events-none"
             style={{ backgroundImage: `url(${kawarpSrc})` }}
           />
         )}
         {effectsReady ? (
-          <KawarpWrapper src={kawarpSrc} onError={onError} />
+          <KawarpWrapper src={kawarpSrc} onLoad={onKawarpLoad} onError={onError} />
         ) : null}
       </div>
 
@@ -475,7 +513,6 @@ export function FullscreenPlayer({
       <button
         type="button"
         aria-label={t("player.close_fullscreen")}
-        title={t("player.close_fullscreen") || "Close"}
         onClick={onClose}
         data-no-window-drag
         className="absolute top-[6px] left-[6px] z-30 inline-flex h-[32px] w-[32px] items-center justify-center rounded-lg border-none bg-black/50 backdrop-blur-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.94] transition-all cursor-pointer select-none pointer-events-auto"

@@ -1,4 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type {
+  AuthRefreshResult,
+  StoredAuthSession,
+} from "./auth-session-store";
 import { startPoTokenWorker } from "./youtube/potoken-preload";
 import type { TvSession as YoutubeTvSession } from "./youtube/tv-session";
 import type { SolveResult as YoutubeSolveResult } from "./youtube/n-solver";
@@ -87,6 +91,17 @@ export interface LinerElectronApi {
   getServerTimeOffset: () => Promise<number>;
   signCoverUrl: (payload: string) => Promise<string>;
   signRawPayload: (payload: number[] | Uint8Array) => Promise<string>;
+  authSession?: {
+    get: () => StoredAuthSession | null;
+    set: (
+      next: { accessToken: string; refreshToken: string } | null,
+    ) => Promise<StoredAuthSession | null>;
+    refresh: (input: {
+      apiBaseUrl: string;
+      refreshToken?: string;
+    }) => Promise<AuthRefreshResult>;
+    onChange: (cb: (session: StoredAuthSession | null) => void) => () => void;
+  };
   onDeeplink: (cb: (target: DeeplinkTarget) => void) => () => void;
   diagnoseNetwork: (hosts: string[]) => Promise<MainNetResult>;
   openDownloads: (customPath?: string) => Promise<boolean>;
@@ -149,6 +164,7 @@ export interface LinerElectronApi {
   getTouchBarInitialState: () => Promise<any>;
   onTouchBarRequestSync: (cb: () => void) => () => void;
   overlayUpdateState: (state: any) => void;
+  overlayReady?: () => void;
   onOverlayAction: (cb: (action: any) => void) => () => void;
   sendOverlayAction: (action: any) => void;
   toggleOverlay: () => Promise<boolean>;
@@ -227,6 +243,19 @@ const api: LinerElectronApi = {
     ipcRenderer.invoke("signer:sign-cover-url", payload),
   signRawPayload: (payload) =>
     ipcRenderer.invoke("signer:sign-raw-payload", payload),
+  authSession: {
+    get: () => ipcRenderer.sendSync("auth:get-session") ?? null,
+    set: (next) => ipcRenderer.invoke("auth:set-session", next),
+    refresh: (input) => ipcRenderer.invoke("auth:refresh", input),
+    onChange: (cb) => {
+      const listener = (_event: unknown, session: StoredAuthSession | null) =>
+        cb(session);
+      ipcRenderer.on("auth:session-changed", listener);
+      return () => {
+        ipcRenderer.removeListener("auth:session-changed", listener);
+      };
+    },
+  },
   diagnoseNetwork: (hosts) => ipcRenderer.invoke("net:diagnose", hosts),
   openDownloads: (customPath) =>
     ipcRenderer.invoke("shell:open-downloads", customPath),
@@ -336,6 +365,9 @@ const api: LinerElectronApi = {
     return () => {
       ipcRenderer.removeListener("touchbar:request-sync", listener);
     };
+  },
+  overlayReady: () => {
+    ipcRenderer.send("overlay:ready");
   },
   overlayUpdateState: (state) => {
     ipcRenderer.send("overlay:update-state", state);

@@ -7,18 +7,21 @@ import { EyeLine, EyeCloseLine, ArrowLeftLine } from "@mingcute/react";
 import WindowControls from "@/features/navigation/ui/WindowControls";
 import LoginBrandPanel from "./LoginBrandPanel";
 import LoginBackdrop from "./LoginBackdrop";
+import { useWindowState } from "@/features/navigation/hooks/useWindowState";
 import {
   authErrorMessage,
   getAuthErrorCode,
   useAuthStore,
 } from "../store/authStore";
 import { useTranslation } from "@/languages";
+import { cn } from "@/shared/lib";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { isEdgeToEdge } = useWindowState();
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
   const { t } = useTranslation();
@@ -178,8 +181,15 @@ export default function LoginPage() {
         : t("login.profile_setup_subtitle");
 
   return (
-    <main className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-5xl border border-border-primary bg-bg-primary">
-      <LoginBackdrop />
+    <main
+      className={cn(
+        "relative flex h-full w-full items-center justify-center overflow-hidden bg-bg-primary",
+        isEdgeToEdge
+          ? "rounded-none border-0"
+          : "rounded-5xl border border-border-primary",
+      )}
+    >
+      <LoginBackdrop edgeToEdge={isEdgeToEdge} />
 
       <WindowControls variant="glass" />
 
@@ -210,7 +220,11 @@ export default function LoginPage() {
                   </button>
                 ))}
               </div>
-              <form onSubmit={submit} className="mt-[22px] flex flex-col">
+              <form
+                noValidate
+                onSubmit={submit}
+                className="mt-[22px] flex flex-col"
+              >
                 <AnimatePresence initial={false}>
                   {mode === "login" || registerStep === 1 ? (
                     <motion.div

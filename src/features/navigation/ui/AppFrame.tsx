@@ -27,6 +27,7 @@ import RightDrawer from "./RightDrawer";
 import DynamicBlurBackground from "./DynamicBlurBackground";
 import { useGlobalShortcuts } from "../hooks/useGlobalShortcuts";
 import { useDisableButtonFocus } from "../hooks/useDisableButtonFocus";
+import { useWindowState } from "../hooks/useWindowState";
 import {
   useSearchTracks,
   useSearchAll,
@@ -79,6 +80,7 @@ export default function AppFrame({ children }: AppFrameProps) {
   const { pathname, search } = location;
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isEdgeToEdge } = useWindowState();
 
   const searchOpen = useModalStore((state) => state.searchOpen);
   const openSearch = useModalStore((state) => state.openSearch);
@@ -668,7 +670,9 @@ export default function AppFrame({ children }: AppFrameProps) {
   return (
     <div
       ref={appFrameRef}
-      className="relative flex flex-col h-full w-full overflow-hidden rounded-[12px] bg-bg-canvas p-1.5 gap-1.5"
+      className={`relative flex flex-col h-full w-full overflow-hidden bg-bg-canvas p-1.5 gap-1.5 ${
+        isEdgeToEdge ? "rounded-none" : "rounded-[12px]"
+      }`}
       onScroll={(e) => {
         if (e.currentTarget.scrollLeft !== 0) e.currentTarget.scrollLeft = 0;
         if (e.currentTarget.scrollTop !== 0) e.currentTarget.scrollTop = 0;
