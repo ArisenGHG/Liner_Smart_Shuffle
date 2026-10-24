@@ -13,12 +13,13 @@ import {
   usePlaylistsList,
   useExternalItems,
   useLikedTrackCount,
+  useYoutubeLibraryItems,
 } from "../hooks";
-import { HeartFill, AddLine } from "@mingcute/react";
+import likesCover from "@/assets/likes-cover.svg";
 import { useTranslation } from "@/languages";
 import { useModalStore } from "../store/modalStore";
 import { useImportStore } from "../store/importStore";
-import { useIsContentTransparent } from "@/features/settings/store/customizationStore";
+import { usePageBackdrop } from "@/shared/lib";
 import ImportingPlaylistCard from "./ImportingPlaylistCard";
 
 const PAGE_SIZE = 24;
@@ -38,6 +39,7 @@ const initialTabState: TabState = {
 };
 
 const initialState: LibraryState = {
+  all: { ...initialTabState },
   playlists: { ...initialTabState },
   albums: { ...initialTabState },
   artists: { ...initialTabState },
@@ -64,7 +66,6 @@ function LikesPlaylistCard({
   viewMode?: LibraryViewMode;
 }) {
   const { t } = useTranslation();
-  const hasCustomBg = useIsContentTransparent();
 
   if (viewMode === "list") {
     return (
@@ -73,14 +74,12 @@ function LikesPlaylistCard({
         className="w-full flex items-center justify-between rounded-md p-[8px] outline-none transition-colors duration-150 ease-out cursor-pointer hover:bg-border-alpha-14 select-none"
       >
         <div className="flex items-center gap-[16px] min-w-0">
-          <div
-            className={`relative h-[48px] w-[48px] shrink-0 overflow-hidden rounded-md flex items-center justify-center ${
-              hasCustomBg ? "apple-glass-static" : "bg-bg-panel"
-            }`}
-          >
-            <HeartFill
-              size={26}
-              className={hasCustomBg ? "text-white" : "text-zinc-400 dark:text-zinc-500"}
+          <div className="relative h-[48px] w-[48px] shrink-0 overflow-hidden rounded-md">
+            <img
+              src={likesCover}
+              alt=""
+              draggable={false}
+              className="h-full w-full object-cover select-none"
             />
           </div>
 
@@ -119,14 +118,12 @@ function LikesPlaylistCard({
       className="group flex flex-col gap-[8px] cursor-pointer"
       draggable={false}
     >
-      <div
-        className={`relative aspect-square w-full overflow-hidden rounded-md flex items-center justify-center ${
-          hasCustomBg ? "apple-glass-static" : "bg-bg-panel"
-        }`}
-      >
-        <HeartFill
-          size={52}
-          className={hasCustomBg ? "text-white" : "text-zinc-400 dark:text-zinc-500"}
+      <div className="relative aspect-square w-full overflow-hidden rounded-md">
+        <img
+          src={likesCover}
+          alt=""
+          draggable={false}
+          className="h-full w-full object-cover select-none"
         />
       </div>
       <div className="flex flex-col gap-[4px]">
@@ -148,7 +145,8 @@ function LikesPlaylistCard({
 export default function LibraryPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<LibraryTab>("playlists");
+  usePageBackdrop(likesCover, { blur: 56, dim: 0.22 });
+  const [activeTab, setActiveTab] = useState<LibraryTab>("all");
   const [stateByTab, setStateByTab] = useState<LibraryState>(initialState);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showTopFog, setShowTopFog] = useState(false);
@@ -183,10 +181,18 @@ export default function LibraryPage() {
   const { data: albumItems = [] } = useExternalItems("album");
   const { data: artistItems = [] } = useExternalItems("artist");
   const { data: externalPlaylistItems = [] } = useExternalItems("playlist");
+  const youtubeItems = useYoutubeLibraryItems();
+  const youtubePlaylistItems = useMemo(
+    () => youtubeItems.filter((item) => item.kind === "playlist"),
+    [youtubeItems],
+  );
+  const youtubeAlbumItems = useMemo(
+    () => youtubeItems.filter((item) => item.kind === "album"),
+    [youtubeItems],
+  );
   const { data: likedCount, isLoading: likedCountLoading } =
     useLikedTrackCount();
   const openCreatePlaylist = useModalStore((state) => state.openCreatePlaylist);
-  const hasCustomBg = useIsContentTransparent();
 
   const playlistItems: LibraryItemViewModel[] = useMemo(() => {
     if (!playlistsData) return [];
@@ -211,17 +217,30 @@ export default function LibraryPage() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab") as LibraryTab | null;
-    if (tab && ["playlists", "albums", "artists"].includes(tab)) {
+    if (tab && ["all", "playlists", "albums", "artists"].includes(tab)) {
       setActiveTab(tab);
     }
   }, []);
 
   const filteredItems = useMemo(() => {
     let source: LibraryItemViewModel[];
-    if (activeTab === "playlists") {
-      source = [...playlistItems, ...externalPlaylistItems];
+    if (activeTab === "all") {
+      source = [
+        ...playlistItems,
+        ...externalPlaylistItems,
+        ...youtubePlaylistItems,
+        ...albumItems,
+        ...youtubeAlbumItems,
+        ...artistItems,
+      ];
+    } else if (activeTab === "playlists") {
+      source = [
+        ...playlistItems,
+        ...externalPlaylistItems,
+        ...youtubePlaylistItems,
+      ];
     } else if (activeTab === "albums") {
-      source = albumItems;
+      source = [...albumItems, ...youtubeAlbumItems];
     } else if (activeTab === "artists") {
       source = artistItems;
     } else {
@@ -242,7 +261,9 @@ export default function LibraryPage() {
     debouncedQuery,
     playlistItems,
     externalPlaylistItems,
+    youtubePlaylistItems,
     albumItems,
+    youtubeAlbumItems,
     artistItems,
   ]);
 
@@ -342,6 +363,7 @@ export default function LibraryPage() {
   }, []);
 
   const importJob = useImportStore((state) => state.job);
+  const showsPlaylists = activeTab === "playlists" || activeTab === "all";
   const isImporting =
     Boolean(importJob) &&
     (importJob?.status === "queued" ||
@@ -357,11 +379,11 @@ export default function LibraryPage() {
           const next = event.currentTarget.scrollTop > 2;
           setShowTopFog((prev) => (prev === next ? prev : next));
         }}
-        className="h-full w-full overflow-y-auto bg-transparent pb-[80px]"
+        className="h-full w-full overflow-y-auto bg-transparent pt-(--page-inset-top) pb-(--page-inset-bottom)"
       >
-        <div className="sticky top-0 z-20 bg-transparent">
+        <div className="relative z-20 bg-transparent">
 
-          <div className="px-[32px] pt-[20px] pb-[10px]">
+          <div className="px-[12px] pt-[8px] pb-[10px]">
             <h1
               className="text-[26px] font-bold text-text-primary tracking-tight m-0 leading-tight"
               style={{ fontFamily: "var(--font-inter), sans-serif" }}
@@ -370,7 +392,7 @@ export default function LibraryPage() {
             </h1>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-[10px] px-[32px] pb-[10px]">
+          <div className="flex flex-wrap items-center justify-between gap-[10px] px-[12px] pb-[10px]">
             <LibraryTabs activeTab={activeTab} onChange={setActiveTab} />
             <LibraryControls
               activeTab={activeTab}
@@ -384,12 +406,13 @@ export default function LibraryPage() {
               }
               viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
+              onCreatePlaylist={showsPlaylists ? () => openCreatePlaylist() : undefined}
             />
           </div>
         </div>
 
 
-        <div className="px-[32px] pt-[4px] pb-[20px]">
+        <div className="px-[12px] pt-[4px] pb-[20px]">
           {activeTab === "playlists" && playlistsError ? (
             <div className="mb-[10px] text-[12px] text-accent-secondary">
               {t("playlist.error_loading")}
@@ -417,7 +440,7 @@ export default function LibraryPage() {
                   viewMode={viewMode}
                   sentinelRef={sentinelRef}
                   prependNodes={
-                    activeTab === "playlists" && !hasSearchQuery
+                    showsPlaylists && !hasSearchQuery
                       ? [
                           <LikesPlaylistCard
                             key="likes-playlist-card"
@@ -447,21 +470,6 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      {activeTab === "playlists" && (
-        <button
-          type="button"
-          onClick={() => openCreatePlaylist()}
-          title={t("library.create_playlist")}
-          aria-label={t("library.create_playlist")}
-          className={`absolute bottom-[20px] right-[24px] z-30 flex h-[44px] w-[44px] items-center justify-center rounded-[14px] ${
-            hasCustomBg
-              ? "apple-glass-prominent"
-              : "bg-btn-primary-bg text-btn-primary-text"
-          } hover:opacity-95 active:scale-[0.92] transition-all border-0 cursor-pointer select-none`}
-        >
-          <AddLine size={22} />
-        </button>
-      )}
     </div>
   );
 }

@@ -1,17 +1,33 @@
-import { asRecord, type JsonRecord, numberValue, stringValue } from "@/shared/utils/json";
+import {
+  asRecord,
+  type JsonRecord,
+  numberValue,
+  stringValue,
+} from "@/shared/utils/json";
 import type { ClientImportedTrack } from "../../importTypes";
 import { withoutArtistPrefix } from "../../shared/titles";
 
-export function mapSoundCloudTrack(item: JsonRecord): ClientImportedTrack | undefined {
+export function mapSoundCloudTrack(
+  item: JsonRecord,
+): ClientImportedTrack | undefined {
   const publisher = asRecord(item.publisher_metadata);
   const user = asRecord(item.user);
   const publisherArtist = stringValue(publisher?.artist);
-  const artist = publisherArtist?.trim() ? publisherArtist.trim() : user?.username;
-  const title = typeof item.title === "string" ? withoutArtistPrefix(item.title, publisherArtist) : undefined;
+  const artist = publisherArtist?.trim()
+    ? publisherArtist.trim()
+    : user?.username;
+  const title =
+    typeof item.title === "string"
+      ? withoutArtistPrefix(item.title, publisherArtist)
+      : undefined;
   if (typeof title !== "string" || typeof artist !== "string") return undefined;
 
-  const artwork = stringValue(item.artwork_url)?.replace(/-large(?=\.[a-z]+$)/i, "-t500x500");
-  const artistId = typeof user?.id === "number" ? `sc_user_${user.id}` : undefined;
+  const artwork = stringValue(item.artwork_url)?.replace(
+    /-large(?=\.[a-z]+$)/i,
+    "-t500x500",
+  );
+  const artistId =
+    typeof user?.id === "number" ? `sc_user_${user.id}` : undefined;
   return {
     sourceId: String(item.id ?? ""),
     title,

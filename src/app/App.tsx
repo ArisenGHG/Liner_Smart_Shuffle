@@ -7,7 +7,6 @@ import { I18nProvider } from "@/languages";
 import { AuthLock } from "@/features/auth";
 import { CoverSwRegistrar } from "@/features/covers";
 import { usePresenceSync } from "@/shared/presence";
-import { useThemeCustomizationSync } from "@/features/settings";
 import { useTouchBarSync } from "@/features/touchbar";
 import { OverlayPlayer, useOverlaySync } from "@/features/overlay";
 import { useDiscordSync } from "@/features/discord";
@@ -29,7 +28,6 @@ function PresenceSync() {
 }
 
 function ThemeSync() {
-  useThemeCustomizationSync();
   return null;
 }
 

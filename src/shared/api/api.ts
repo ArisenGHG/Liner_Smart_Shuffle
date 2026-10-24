@@ -505,6 +505,9 @@ export type {
   PopularTimeWindow,
   PopularTrackItem,
   PopularTracksResponse,
+  PopularAlbumsResponse,
+  MostSavedResponse,
+  MostSavedType,
 } from "../contracts";
 
 import type {
@@ -527,6 +530,9 @@ import type {
   PlaybackHistoryResponse,
   PopularTimeWindow,
   PopularTracksResponse,
+  PopularAlbumsResponse,
+  MostSavedResponse,
+  MostSavedType,
 } from "../contracts";
 
 // ---- Endpoints --------------------------------------------------------------
@@ -1002,6 +1008,21 @@ export const api = {
   ): Promise<PopularTracksResponse> {
     const params = new URLSearchParams({ window, limit: String(limit) });
     return request<PopularTracksResponse>(`/v1/explore/popular?${params}`);
+  },
+
+  getPopularAlbums(
+    window: PopularTimeWindow = "7d",
+    limit = 20,
+  ): Promise<PopularAlbumsResponse> {
+    const params = new URLSearchParams({ window, limit: String(limit) });
+    return request<PopularAlbumsResponse>(
+      `/v1/explore/popular/albums?${params}`,
+    );
+  },
+
+  getMostSaved(type: MostSavedType = "all", limit = 20): Promise<MostSavedResponse> {
+    const params = new URLSearchParams({ type, limit: String(limit) });
+    return request<MostSavedResponse>(`/v1/explore/most-saved?${params}`);
   },
 
   getDailyMixes(): Promise<DailyMixesResponse> {
