@@ -25,6 +25,8 @@ import {
 } from "@/shared/ui";
 import { usePageBackdrop } from "@/shared/lib";
 import likesCover from "@/assets/likes-cover.svg";
+import { useAuthStore } from "@/features/auth";
+import { userDisplayName } from "@/entities/user";
 import {
   AddLine,
   PlayFill,
@@ -123,6 +125,8 @@ function LibraryPlaylistContent() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get("id");
   const isLikesMode = id === "likes";
+  const currentUser = useAuthStore((state) => state.user);
+  const likesOwnerName = userDisplayName(currentUser);
   const decodedId = id ? decodeURIComponent(id) : null;
   const scrollRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -554,8 +558,11 @@ function LibraryPlaylistContent() {
                     </h1>
                   }
                   subtitle={
-                    isLikesMode ? undefined : viewData.bio ||
-                      isEditingDescription ? (
+                    isLikesMode ? (
+                      likesOwnerName ? (
+                        <p className={HERO_SUBTITLE_CLASS}>{likesOwnerName}</p>
+                      ) : undefined
+                    ) : viewData.bio || isEditingDescription ? (
                       <p
                         ref={descriptionRef}
                         className={`${HERO_SUBTITLE_CLASS} cursor-text outline-none transition-colors empty:min-h-[21px] ${
@@ -608,9 +615,7 @@ function LibraryPlaylistContent() {
                   }
                   meta={
                     <div className="flex items-center flex-wrap gap-[6px]">
-                      <div
-                        className={HERO_CHIP_CLASS}
-                      >
+                      <div className={HERO_CHIP_CLASS}>
                         <MusicLine
                           size={13}
                           className="text-text-secondary shrink-0"

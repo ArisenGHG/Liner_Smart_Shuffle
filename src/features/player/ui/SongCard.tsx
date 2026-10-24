@@ -40,6 +40,7 @@ export interface SongCardProps {
   /** search query whose matches get marked in the title */
   highlight?: string;
   hideArtists?: boolean;
+  trailingAction?: React.ReactNode;
 }
 
 function SongCard({
@@ -70,6 +71,7 @@ function SongCard({
   onGrabStart,
   highlight,
   hideArtists = false,
+  trailingAction,
 }: SongCardProps) {
   const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(() => isCoverReady(coverUrl));
@@ -290,6 +292,7 @@ function SongCard({
             position={menuPosition}
           />
         )}
+        {trailingAction}
       </div>
     </div>
   );

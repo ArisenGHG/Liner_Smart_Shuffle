@@ -24,6 +24,7 @@ import { useScrollFade } from "@/shared/hooks";
 import { useTranslation, getTranslationsForAllLocales } from "@/languages";
 import { useModalStore } from "@/features/library";
 import { useAuthStore } from "@/features/auth";
+import { userDisplayName } from "@/entities/user";
 import {
   PlaybackTab,
   ShortcutsTab,
@@ -379,11 +380,7 @@ export default function SettingsModal() {
 
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const displayName =
-    user?.displayName ||
-    user?.username ||
-    user?.email?.split("@")[0] ||
-    "Liner";
+  const displayName = userDisplayName(user) ?? "Liner";
   const handle = user?.username
     ? `@${user.username}`
     : (user?.email ?? t("settings.manage_account"));
