@@ -1,5 +1,11 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { api, getAuthSession, mediaUrl, toClientTrack, type ApiUserPlaylistItem } from "@/shared/api";
+import {
+  api,
+  getAuthSession,
+  mediaUrl,
+  toClientTrack,
+  type ApiUserPlaylistItem,
+} from "@/shared/api";
 import { queryCache } from "@/shared/cache/queryCache";
 import type { Track } from "@/shared/types";
 
@@ -29,16 +35,26 @@ export interface LibraryPlaylistDetail {
 type PlaylistList = { playlists: LibraryPlaylistSummary[]; total: number };
 
 const COVER_CACHE_KEY = "liner:playlist-covers-v2";
-type CoverCacheEntry = { coverUrls: string[]; trackCount: number; updatedAt: string };
+type CoverCacheEntry = {
+  coverUrls: string[];
+  trackCount: number;
+  updatedAt: string;
+};
 type CoverCache = Record<string, CoverCacheEntry>;
 
 function readCoverCache(): CoverCache {
   if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(COVER_CACHE_KEY) ?? "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(COVER_CACHE_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
 }
 
 function writeCoverCache(c: CoverCache) {
-  try { localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(c)); } catch {}
+  try {
+    localStorage.setItem(COVER_CACHE_KEY, JSON.stringify(c));
+  } catch {}
 }
 
 function extractCovers(items: ApiUserPlaylistItem[]): string[] {
@@ -84,7 +100,11 @@ function snapshot() {
   return view;
 }
 
-const SERVER_SNAPSHOT = { data: EMPTY, error: undefined as unknown, isLoading: true };
+const SERVER_SNAPSHOT = {
+  data: EMPTY,
+  error: undefined as unknown,
+  isLoading: true,
+};
 
 function load(force = false): Promise<void> {
   if (request) return request;
@@ -133,7 +153,7 @@ function load(force = false): Promise<void> {
           coverUrl: covers[0] ?? "",
           coverUrls: covers,
         };
-      })
+      }),
     );
 
     const liveIds = new Set(response.items.map((p) => p.id));
@@ -181,7 +201,11 @@ function toTrack(item: ApiUserPlaylistItem): Track {
 }
 
 export function usePlaylistsList() {
-  const state = useSyncExternalStore(subscribe, snapshot, () => SERVER_SNAPSHOT);
+  const state = useSyncExternalStore(
+    subscribe,
+    snapshot,
+    () => SERVER_SNAPSHOT,
+  );
   useEffect(() => {
     void load();
   }, []);
@@ -190,8 +214,12 @@ export function usePlaylistsList() {
 
 export function usePlaylist(id: string | null) {
   const cacheKey = id ? `playlist:detail:${id}` : null;
-  const cached = cacheKey ? queryCache.get<LibraryPlaylistDetail>(cacheKey) : undefined;
-  const [data, setData] = useState<LibraryPlaylistDetail | null>(cached ?? null);
+  const cached = cacheKey
+    ? queryCache.get<LibraryPlaylistDetail>(cacheKey)
+    : undefined;
+  const [data, setData] = useState<LibraryPlaylistDetail | null>(
+    cached ?? null,
+  );
   const [error, setError] = useState<unknown>();
   const [isLoading, setIsLoading] = useState(!cached && Boolean(id));
 

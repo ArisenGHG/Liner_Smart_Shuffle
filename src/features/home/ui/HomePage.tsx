@@ -124,7 +124,6 @@ export default function HomePage() {
                 headingMarginTop="mt-[22px]"
               />
             )}
-
           </div>
         )}
 

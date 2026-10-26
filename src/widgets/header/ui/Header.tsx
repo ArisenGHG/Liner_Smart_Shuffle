@@ -38,7 +38,9 @@ function BackButton() {
         size={16}
         className="transition-transform duration-150 group-hover:-translate-x-0.5"
       />
-      <span className="relative -left-[1.5px] top-[1px]">{t("common.back")}</span>
+      <span className="relative -left-[1.5px] top-[1px]">
+        {t("common.back")}
+      </span>
     </button>
   );
 }

@@ -5,4 +5,7 @@ export { default as WindowControls } from "./ui/WindowControls";
 export { default as RightDrawer } from "./ui/RightDrawer";
 export { default as PageTransition } from "./ui/PageTransition";
 export { sidebarNavItems, type NavItem } from "./data/navigation";
-export { useWindowState, type WindowStateHookResult } from "./hooks/useWindowState";
+export {
+  useWindowState,
+  type WindowStateHookResult,
+} from "./hooks/useWindowState";

@@ -18,7 +18,8 @@ if (typeof window !== "undefined") {
 
 export const debouncedStorage = {
   getItem: (name: string) => {
-    if (typeof window === "undefined" || typeof localStorage === "undefined") return null;
+    if (typeof window === "undefined" || typeof localStorage === "undefined")
+      return null;
     if (pendingWrites.has(name)) {
       return pendingWrites.get(name)!;
     }

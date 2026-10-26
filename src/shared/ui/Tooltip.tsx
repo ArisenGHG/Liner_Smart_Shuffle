@@ -81,7 +81,8 @@ function Tooltip({
     } else {
       top = rect.top + rect.height / 2;
       top = Math.min(Math.max(top, 24), window.innerHeight - 24);
-      left = side === "right" ? rect.right + sideOffset : rect.left - sideOffset;
+      left =
+        side === "right" ? rect.right + sideOffset : rect.left - sideOffset;
     }
 
     setPos({ top: Math.round(top), left: Math.round(left) });

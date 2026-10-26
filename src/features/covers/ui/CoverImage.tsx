@@ -15,9 +15,13 @@ export default function CoverImage({
   ...rest
 }: CoverImageProps) {
   const centralSrc = useCoverSrc(src);
-  const [localFallback, setLocalFallback] = useState<string | undefined>(undefined);
+  const [localFallback, setLocalFallback] = useState<string | undefined>(
+    undefined,
+  );
   const [retryCount, setRetryCount] = useState(0);
-  const [corsMode, setCorsMode] = useState<ImageProps["crossOrigin"]>(crossOrigin || undefined);
+  const [corsMode, setCorsMode] = useState<ImageProps["crossOrigin"]>(
+    crossOrigin || undefined,
+  );
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {

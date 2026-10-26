@@ -5,7 +5,10 @@ import { MenuSelect, ToggleSwitch } from "@/shared/ui";
 import { revealThemeChange } from "@/shared/lib";
 import { SettingBlock, SettingRow, SettingSection } from "../controls";
 import { ThemeCard } from "./ThemeCard";
-import { useCustomizationStore, useIsDarkTheme } from "../../store/customizationStore";
+import {
+  useCustomizationStore,
+  useIsDarkTheme,
+} from "../../store/customizationStore";
 
 export function AppearanceTab({ searchQuery }: { searchQuery?: string }) {
   const { t, locale, setLocale } = useTranslation();
@@ -82,7 +85,8 @@ export function AppearanceTab({ searchQuery }: { searchQuery?: string }) {
         title={t("settings.cover_glow.title") || "Cover glow"}
         description={
           !isDarkTheme
-            ? t("settings.cover_glow.disabled_for_light") || "Off in light theme."
+            ? t("settings.cover_glow.disabled_for_light") ||
+              "Off in light theme."
             : t("settings.cover_glow.description") ||
               "Blurred artwork glow behind pages. Turn off to keep a plain background."
         }

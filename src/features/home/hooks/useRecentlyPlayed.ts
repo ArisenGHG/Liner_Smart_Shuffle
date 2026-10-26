@@ -35,7 +35,10 @@ export function useRecentlyPlayed(limit = 20) {
     let active = true;
     setIsLoading(!cached);
     const fetchLimit = Math.min(100, Math.max(limit * 3, 60));
-    loadWithRetry(() => api.getHistory(undefined, fetchLimit), () => active)
+    loadWithRetry(
+      () => api.getHistory(undefined, fetchLimit),
+      () => active,
+    )
       .then((res) => {
         if (!active) return;
         const seen = new Set<string>();
@@ -44,7 +47,9 @@ export function useRecentlyPlayed(limit = 20) {
           if (!entry.track?.id) continue;
 
           const isAlbum = entry.context?.type === "album";
-          const albumId = isAlbum ? (entry.context?.id || entry.track.album?.id) : undefined;
+          const albumId = isAlbum
+            ? entry.context?.id || entry.track.album?.id
+            : undefined;
 
           if (albumId) {
             const albumKey = `album:${albumId}`;

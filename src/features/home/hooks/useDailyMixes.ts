@@ -77,7 +77,9 @@ function cachedMixesFor(owner: string): DailyMix[] {
 export function useDailyMixes() {
   const owner = useSessionOwner();
   const [data, setData] = useState<DailyMix[]>(() => cachedMixesFor(owner));
-  const [isLoading, setIsLoading] = useState(() => cachedMixesFor(owner).length === 0);
+  const [isLoading, setIsLoading] = useState(
+    () => cachedMixesFor(owner).length === 0,
+  );
 
   useEffect(() => {
     const cached = cachedMixesFor(owner);
@@ -89,7 +91,10 @@ export function useDailyMixes() {
 
     let active = true;
     setIsLoading(cached.length === 0);
-    loadWithRetry(() => api.getDailyMixes(), () => active)
+    loadWithRetry(
+      () => api.getDailyMixes(),
+      () => active,
+    )
       .then((res) => {
         if (!active) return;
         const mixes: DailyMix[] = (res.items || []).map((mix) => {

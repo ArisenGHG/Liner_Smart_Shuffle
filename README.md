@@ -178,4 +178,3 @@ Liner is distributed under the **Liner Source-Available & Non-Commercial Contrib
 - **Prohibited**: Commercial distribution, public competing forks, or extracting core algorithms for third-party products.
 
 See [LICENSE](./LICENSE) for details.
-

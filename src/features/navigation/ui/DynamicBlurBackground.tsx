@@ -13,8 +13,7 @@ export interface DynamicBlurBackgroundProps {
 export function DynamicBlurBackground({
   isDark = true,
 }: DynamicBlurBackgroundProps) {
-  const { effectiveCoverSrc, pageBackdropOptions } =
-    useActiveBackgroundCover();
+  const { effectiveCoverSrc, pageBackdropOptions } = useActiveBackgroundCover();
 
   if (!effectiveCoverSrc) return null;
 

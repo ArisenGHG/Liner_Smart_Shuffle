@@ -40,7 +40,9 @@ const cache = new Map<string, { data: PopularItem[]; timestamp: number }>();
 const CACHE_TTL = 60_000;
 
 export function usePopularTracksOnly(limit = 20) {
-  const [data, setData] = useState<PopularItem[]>(() => cache.get(`tracks_7d_${limit}`)?.data ?? []);
+  const [data, setData] = useState<PopularItem[]>(
+    () => cache.get(`tracks_7d_${limit}`)?.data ?? [],
+  );
   const [isLoading, setIsLoading] = useState(!cache.has(`tracks_7d_${limit}`));
 
   useEffect(() => {
@@ -80,7 +82,9 @@ export function usePopularTracksOnly(limit = 20) {
 }
 
 export function usePopularTracksAllTime(limit = 20) {
-  const [data, setData] = useState<PopularItem[]>(() => cache.get(`tracks_all_${limit}`)?.data ?? []);
+  const [data, setData] = useState<PopularItem[]>(
+    () => cache.get(`tracks_all_${limit}`)?.data ?? [],
+  );
   const [isLoading, setIsLoading] = useState(!cache.has(`tracks_all_${limit}`));
 
   useEffect(() => {
@@ -101,7 +105,10 @@ export function usePopularTracksAllTime(limit = 20) {
           item: toClientTrack(entry.track),
           playCount: entry.playCount,
         }));
-        cache.set(`tracks_all_${limit}`, { data: items, timestamp: Date.now() });
+        cache.set(`tracks_all_${limit}`, {
+          data: items,
+          timestamp: Date.now(),
+        });
         setData(items);
       })
       .catch(() => {

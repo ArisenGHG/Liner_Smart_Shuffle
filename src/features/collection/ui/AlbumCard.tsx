@@ -93,7 +93,10 @@ function AlbumCard({
               <>
                 {year && <span>{year}</span>}
                 {year && trackCount && (
-                  <span className="w-[3px] h-[3px] rounded-full bg-text-tertiary/40 shrink-0" aria-hidden />
+                  <span
+                    className="w-[3px] h-[3px] rounded-full bg-text-tertiary/40 shrink-0"
+                    aria-hidden
+                  />
                 )}
                 {trackCount && <span>{trackCount} tracks</span>}
               </>

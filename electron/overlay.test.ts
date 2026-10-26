@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const electron = vi.hoisted(() => {
-  const { EventEmitter } = require("node:events") as typeof import("node:events");
+  const { EventEmitter } =
+    require("node:events") as typeof import("node:events");
   const ipcOn = new Map<string, (...args: unknown[]) => unknown>();
   const windows: FakeWindow[] = [];
   let nextId = 1;
@@ -25,10 +26,23 @@ const electron = vi.hoisted(() => {
     hide = vi.fn(() => {
       this.visible = false;
     });
-    constructor(options: { show?: boolean; x?: number; y?: number; width?: number; height?: number } = {}) {
+    constructor(
+      options: {
+        show?: boolean;
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+      } = {},
+    ) {
       super();
       this.visible = options.show ?? true;
-      this.bounds = { x: options.x ?? 0, y: options.y ?? 0, width: options.width ?? 0, height: options.height ?? 0 };
+      this.bounds = {
+        x: options.x ?? 0,
+        y: options.y ?? 0,
+        width: options.width ?? 0,
+        height: options.height ?? 0,
+      };
       windows.push(this);
     }
     isDestroyed() {
@@ -66,18 +80,27 @@ const electron = vi.hoisted(() => {
     module: {
       BrowserWindow: FakeWindow,
       ipcMain: {
-        on: (channel: string, handler: (...args: unknown[]) => unknown) => ipcOn.set(channel, handler),
+        on: (channel: string, handler: (...args: unknown[]) => unknown) =>
+          ipcOn.set(channel, handler),
         handle: () => {},
       },
-      screen: { getPrimaryDisplay: () => display, getDisplayMatching: () => display },
+      screen: {
+        getPrimaryDisplay: () => display,
+        getDisplayMatching: () => display,
+      },
       globalShortcut: { register: () => true, unregister: () => {} },
-      app: { getPath: () => require("node:os").tmpdir() + "/liner-overlay-test-missing" },
+      app: {
+        getPath: () =>
+          require("node:os").tmpdir() + "/liner-overlay-test-missing",
+      },
     },
   };
 });
 
 vi.mock("electron", () => electron.module);
-vi.mock("./compositor/index.js", () => ({ createCompositorBridge: () => null }));
+vi.mock("./compositor/index.js", () => ({
+  createCompositorBridge: () => null,
+}));
 
 import { OverlayManager } from "./overlay";
 
@@ -87,9 +110,13 @@ function setup(signedIn = true) {
   const manager = new OverlayManager("/preload.cjs", "/dist");
   const main = new electron.FakeWindow({ show: true }) as Win;
   manager.setMainWindow(main as never);
-  manager.bindAuthSource(() => signedIn, () => {});
+  manager.bindAuthSource(
+    () => signedIn,
+    () => {},
+  );
   const overlays = () => electron.windows.filter((w) => w !== main) as Win[];
-  const ready = (win: Win) => electron.ipcOn.get("overlay:ready")?.({ sender: win.webContents });
+  const ready = (win: Win) =>
+    electron.ipcOn.get("overlay:ready")?.({ sender: win.webContents });
   return { manager, main, overlays, ready };
 }
 
@@ -189,7 +216,10 @@ describe("OverlayManager", () => {
     const { manager, overlays } = setup();
     manager.setIndexPathResolver(() => "/bundles/v42/dist/index.html");
     manager.showOverlay();
-    expect(overlays()[0].loadFile).toHaveBeenCalledWith("/bundles/v42/dist/index.html", { hash: "/overlay" });
+    expect(overlays()[0].loadFile).toHaveBeenCalledWith(
+      "/bundles/v42/dist/index.html",
+      { hash: "/overlay" },
+    );
   });
 
   it("rebuilds the hidden overlay when the main window switches ui bundles", async () => {
@@ -203,7 +233,9 @@ describe("OverlayManager", () => {
     expect(old.isDestroyed()).toBe(true);
     await vi.advanceTimersByTimeAsync(600);
     const fresh = overlays().find((w) => !w.isDestroyed())!;
-    expect(fresh.loadFile).toHaveBeenCalledWith("/bundles/v2/dist/index.html", { hash: "/overlay" });
+    expect(fresh.loadFile).toHaveBeenCalledWith("/bundles/v2/dist/index.html", {
+      hash: "/overlay",
+    });
   });
 
   it("primes a new overlay invisibly so the first minimize hand-off has a painted surface", async () => {
@@ -248,7 +280,10 @@ describe("OverlayManager", () => {
     const { overlays, ready } = setup();
     await vi.advanceTimersByTimeAsync(600);
     const [overlay] = overlays();
-    electron.ipcOn.get("overlay:update-settings")?.({}, { alwaysOnTop: true, position: "top-right" });
+    electron.ipcOn.get("overlay:update-settings")?.(
+      {},
+      { alwaysOnTop: true, position: "top-right" },
+    );
     ready(overlay);
     await vi.advanceTimersByTimeAsync(1_000);
     expect(overlay.moveTop).not.toHaveBeenCalled();

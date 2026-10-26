@@ -10,7 +10,11 @@ import {
 } from "@/features/player";
 import SongCardWithMenu from "@/features/player/ui/SongCardWithMenu";
 import { useTranslation } from "@/languages";
-import { ReorderDropPlaceholder, FloatingDragCard, showToast } from "@/shared/ui";
+import {
+  ReorderDropPlaceholder,
+  FloatingDragCard,
+  showToast,
+} from "@/shared/ui";
 import { useListReorder } from "@/shared/hooks";
 import RightDrawerHeader from "./RightDrawerHeader";
 
@@ -66,22 +70,28 @@ const QueueList = memo(function QueueList({
   const handleRemove = useCallback(
     (index: number, id: string) => {
       setRemovingIndex(index);
-      window.setTimeout(() => {
-        const track = usePlayerStore.getState().queue[index];
-        // the queue may have changed during the animation: only remove that same track
-        const undo = track?.id === id ? playerEngine.removeFromQueue(index) : null;
-        if (track && undo) {
-          showToast(t("common.removed_from_queue"), "checkmark", {
-            description: track.artists ? `${track.title} — ${track.artists}` : track.title,
-            action: {
-              label: t("common.undo"),
-              icon: <Back2Line size={14} />,
-              onClick: undo,
-            },
-          });
-        }
-        setRemovingIndex(null);
-      }, reduceMotion ? 0 : REMOVE_MS);
+      window.setTimeout(
+        () => {
+          const track = usePlayerStore.getState().queue[index];
+          // the queue may have changed during the animation: only remove that same track
+          const undo =
+            track?.id === id ? playerEngine.removeFromQueue(index) : null;
+          if (track && undo) {
+            showToast(t("common.removed_from_queue"), "checkmark", {
+              description: track.artists
+                ? `${track.title} — ${track.artists}`
+                : track.title,
+              action: {
+                label: t("common.undo"),
+                icon: <Back2Line size={14} />,
+                onClick: undo,
+              },
+            });
+          }
+          setRemovingIndex(null);
+        },
+        reduceMotion ? 0 : REMOVE_MS,
+      );
     },
     [reduceMotion, t],
   );
@@ -134,14 +144,22 @@ const QueueList = memo(function QueueList({
         const isRemoving = removingIndex === index;
 
         let shiftY = 0;
-        if (isDragging && dragIndex !== null && dropIndex !== null && index !== dragIndex) {
+        if (
+          isDragging &&
+          dragIndex !== null &&
+          dropIndex !== null &&
+          index !== dragIndex
+        ) {
           if (dragIndex < dropIndex) {
-            if (index > dragIndex && index <= dropIndex) shiftY = -QUEUE_ITEM_HEIGHT;
+            if (index > dragIndex && index <= dropIndex)
+              shiftY = -QUEUE_ITEM_HEIGHT;
           } else if (dragIndex > dropIndex) {
-            if (index >= dropIndex && index < dragIndex) shiftY = QUEUE_ITEM_HEIGHT;
+            if (index >= dropIndex && index < dragIndex)
+              shiftY = QUEUE_ITEM_HEIGHT;
           }
         }
-        if (removingIndex !== null && index > removingIndex) shiftY = -QUEUE_ITEM_HEIGHT;
+        if (removingIndex !== null && index > removingIndex)
+          shiftY = -QUEUE_ITEM_HEIGHT;
 
         return (
           <div
@@ -176,7 +194,9 @@ const QueueList = memo(function QueueList({
               explicit={item.explicit}
               durationMs={item.durationMs}
               coverUrl={
-                item.coverUrl ?? (item as { cover_url?: string }).cover_url ?? ""
+                item.coverUrl ??
+                (item as { cover_url?: string }).cover_url ??
+                ""
               }
               showReorderHandle
               onRemoveFromQueue={
@@ -196,7 +216,8 @@ const QueueList = memo(function QueueList({
               }`}
               imageShape="square"
               onPlay={() => {
-                if (typeof window !== "undefined" && window.__linerWasDragging) return;
+                if (typeof window !== "undefined" && window.__linerWasDragging)
+                  return;
                 void playerEngine.playTrack(
                   item,
                   queue,
@@ -250,7 +271,12 @@ function RightDrawer({ onClose }: RightDrawerProps) {
   const { t } = useTranslation();
   const queueScrollRef = useRef<HTMLDivElement>(null);
   const [queueLimit, setQueueLimit] = useState(() =>
-    Math.max(50, Math.ceil(((player.currentIndex >= 0 ? player.currentIndex : 0) + 30) / 50) * 50),
+    Math.max(
+      50,
+      Math.ceil(
+        ((player.currentIndex >= 0 ? player.currentIndex : 0) + 30) / 50,
+      ) * 50,
+    ),
   );
   const [isQueueScrolled, setIsQueueScrolled] = useState(false);
 
@@ -259,7 +285,10 @@ function RightDrawer({ onClose }: RightDrawerProps) {
       setQueueLimit((prev) =>
         Math.max(
           prev,
-          Math.min(player.queue.length, Math.ceil((player.currentIndex + 30) / 50) * 50),
+          Math.min(
+            player.queue.length,
+            Math.ceil((player.currentIndex + 30) / 50) * 50,
+          ),
         ),
       );
     }
@@ -267,7 +296,8 @@ function RightDrawer({ onClose }: RightDrawerProps) {
 
   const scrollQueueToCurrent = useCallback(() => {
     const container = queueScrollRef.current;
-    if (!container || player.currentIndex < 0 || player.queue.length === 0) return;
+    if (!container || player.currentIndex < 0 || player.queue.length === 0)
+      return;
     const targetY = getQueueScrollTarget(container, player.currentIndex);
     setIsQueueScrolled(targetY > 2);
     container.scrollTo({ top: targetY, behavior: "smooth" });
@@ -283,7 +313,9 @@ function RightDrawer({ onClose }: RightDrawerProps) {
     }
   }, []);
 
-  const prevQueueTrackIdRef = useRef<string | null>(player.currentTrack?.id ?? null);
+  const prevQueueTrackIdRef = useRef<string | null>(
+    player.currentTrack?.id ?? null,
+  );
 
   useEffect(() => {
     const currentId = player.currentTrack?.id ?? null;
@@ -294,9 +326,7 @@ function RightDrawer({ onClose }: RightDrawerProps) {
   }, [player.currentTrack?.id, scrollQueueToCurrent]);
 
   return (
-    <div
-      className="relative flex flex-col h-full w-full overflow-hidden rounded-[14px] select-none bg-bg-glass backdrop-blur-[48px]"
-    >
+    <div className="relative flex flex-col h-full w-full overflow-hidden rounded-[14px] select-none bg-bg-glass backdrop-blur-[48px]">
       <RightDrawerHeader
         trackCount={player.queue.length}
         shuffle={player.shuffle}
@@ -305,7 +335,10 @@ function RightDrawer({ onClose }: RightDrawerProps) {
         onShuffleToggle={() => playerEngine.setShuffle(!player.shuffle)}
         onRepeatCycle={() =>
           playerEngine.setRepeat(
-            nextRepeatMode(player.repeat, isRadioContext(player.playbackContext)),
+            nextRepeatMode(
+              player.repeat,
+              isRadioContext(player.playbackContext),
+            ),
           )
         }
         onClear={() => playerEngine.clearQueue()}
@@ -336,9 +369,7 @@ function RightDrawer({ onClose }: RightDrawerProps) {
               target.scrollHeight - target.scrollTop <=
               target.clientHeight * 1.5
             ) {
-              setQueueLimit((prev) =>
-                Math.min(prev + 50, player.queue.length),
-              );
+              setQueueLimit((prev) => Math.min(prev + 50, player.queue.length));
             }
           }}
         >

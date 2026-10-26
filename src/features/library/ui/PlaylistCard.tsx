@@ -82,11 +82,7 @@ function PlaylistCard({
   } | null>(null);
 
   const effectiveUrls =
-    coverUrls && coverUrls.length > 0
-      ? coverUrls
-      : imageUrl
-        ? [imageUrl]
-        : [];
+    coverUrls && coverUrls.length > 0 ? coverUrls : imageUrl ? [imageUrl] : [];
   const hasCollage = effectiveUrls.length >= 2;
 
   const handleContextMenu = useCallback(

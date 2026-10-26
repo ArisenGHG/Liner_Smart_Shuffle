@@ -12,11 +12,14 @@ let view = { data: cache, isLoading: true };
 
 const optimisticOverrides = new Map<string, boolean>();
 
-function buildView(isLoading: boolean): { data: LikedData; isLoading: boolean } {
+function buildView(isLoading: boolean): {
+  data: LikedData;
+  isLoading: boolean;
+} {
   if (optimisticOverrides.size === 0) return { data: cache, isLoading };
 
   let tracks = cache.tracks.filter(
-    (t) => optimisticOverrides.get(t.id) !== false
+    (t) => optimisticOverrides.get(t.id) !== false,
   );
   for (const [id, liked] of optimisticOverrides) {
     if (liked && !tracks.some((t) => t.id === id)) {
@@ -128,7 +131,11 @@ if (typeof window !== "undefined") {
 }
 
 export function useLikedTracks(_params?: { limit?: number; offset?: number }) {
-  const state = useSyncExternalStore(subscribe, snapshot, () => SERVER_SNAPSHOT);
+  const state = useSyncExternalStore(
+    subscribe,
+    snapshot,
+    () => SERVER_SNAPSHOT,
+  );
   useEffect(() => {
     void load();
   }, []);
