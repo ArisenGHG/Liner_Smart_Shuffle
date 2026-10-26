@@ -437,4 +437,62 @@ describe("LoginPage Multi-Step Registration Flow", () => {
     );
     expect(mockNavigate).toHaveBeenCalledWith("/", { replace: true });
   });
+
+  it("shows a taken username under the username field, not under the display name", async () => {
+    mockRegister.mockRejectedValueOnce({ code: "USERNAME_TAKEN" });
+    await act(async () => {
+      root.render(<LoginPage />);
+    });
+
+    const setValue = (selector: string, value: string) => {
+      const input = container.querySelector(selector) as HTMLInputElement;
+      Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      )?.set?.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    const submitForm = async () => {
+      await act(async () => {
+        container
+          .querySelector("form")
+          ?.dispatchEvent(
+            new Event("submit", { bubbles: true, cancelable: true }),
+          );
+      });
+    };
+
+    const createAccBtn = Array.from(container.querySelectorAll("button")).find(
+      (b) => b.textContent?.includes("Create account"),
+    );
+    await act(async () => {
+      createAccBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await act(async () => {
+      setValue("#auth-email", "carol@example.com");
+      setValue("#auth-password", "password123");
+      setValue("#auth-confirm", "password123");
+    });
+    await submitForm();
+    await act(async () => {
+      setValue("#auth-username", "admin");
+      setValue("#auth-display-name", "Carol");
+    });
+    await submitForm();
+
+    const errorEl = container.querySelector("#auth-form-error");
+    const usernameInput = container.querySelector("#auth-username");
+    const displayNameInput = container.querySelector("#auth-display-name");
+    expect(errorEl?.textContent).toBeTruthy();
+    expect(container.querySelector("#auth-username-hint")).toBeNull();
+    expect(
+      usernameInput!.compareDocumentPosition(errorEl!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      errorEl!.compareDocumentPosition(displayNameInput!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(displayNameInput?.getAttribute("aria-invalid")).toBe("false");
+  });
 });
