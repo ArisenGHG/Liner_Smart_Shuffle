@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. Please check the [FAQ](https://github.com/tryliner/desktop/blob/main/docs/FAQ.md) first: tracks not playing, imports failing and macOS refusing to open the app are covered there.
+        Thanks for reporting. Please check the [FAQ](https://github.com/tryliner/desktop/blob/main/docs/FAQ.md) first: the most common problems are covered there.
 
   - type: checkboxes
     id: checks

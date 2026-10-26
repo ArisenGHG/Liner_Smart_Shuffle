@@ -16,12 +16,6 @@ YouTube is blocked or throttled on your network or in your region.
 3. If YouTube Music works in the browser but Liner doesn't on the latest version, open a
    bug report with your Liner version and the error.
 
-## Some album tracks play a music video or don't play at all
-
-For some albums YouTube Music only offers music videos or YouTube Music Premium audio to
-free listeners. Liner switches to the song version when it finds an exact match; when it
-can't, it plays what YouTube offers.
-
 ## Playlist import fails
 
 Imports read the playlist from the source (Spotify, Apple Music, Deezer, SoundCloud,
@@ -41,16 +35,10 @@ xattr -dr com.apple.quarantine /Applications/Liner.app
 Right-click → **Open** on the app works as well. Updates on macOS are installed by
 downloading the new release.
 
-## macOS warns that Liner won't work in a future macOS version
-
-That's Apple's notice for Intel apps running through Rosetta. Use the Apple silicon
-(arm64) build and delete any Intel copy of Liner from Applications.
-
-## I can't register ("429") or forgot my password
+## I can't register ("429")
 
 Registration is limited to one account per IP address, so a 429 means an account was
-already created from your network. Sign in with that account. Password reset is coming
-with the profiles update.
+already created from your network. Sign in with that account.
 
 ## Where does Liner keep my data, and what does it send?
 
