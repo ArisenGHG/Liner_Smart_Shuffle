@@ -12,6 +12,7 @@ import {
 } from "./tvTokens";
 
 const STORAGE_KEY = "liner_youtube_tv_session";
+const PAGE_ID_STORAGE_KEY = "liner_youtube_page_id";
 const REVOKE_URL = "https://www.youtube.com/o/oauth2/revoke";
 const REFRESH_MARGIN_MS = 60_000;
 const TERMINAL_REFRESH_ERRORS = new Set([
@@ -24,6 +25,7 @@ type MainYoutubeAuthBridge = NonNullable<
 >;
 
 let session: YoutubeAuthTokens | null | undefined;
+let pageId: string | null | undefined;
 let pendingRefresh: Promise<YoutubeAuthTokens | null> | null = null;
 
 function mainBridge(): MainYoutubeAuthBridge | null {
@@ -38,6 +40,10 @@ function readLocal(): YoutubeAuthTokens | null {
   } catch {
     return null;
   }
+}
+
+function notifyChanged(): void {
+  globalThis.dispatchEvent?.(new Event("youtube-auth:changed"));
 }
 
 function dropLocal(): void {
@@ -90,7 +96,40 @@ function save(next: YoutubeAuthTokens | null): void {
       return;
     }
   }
-  globalThis.dispatchEvent?.(new Event("youtube-auth:changed"));
+  notifyChanged();
+}
+
+function storePageId(next: string | null): void {
+  pageId = next;
+  try {
+    if (next) globalThis.localStorage?.setItem(PAGE_ID_STORAGE_KEY, next);
+    else globalThis.localStorage?.removeItem(PAGE_ID_STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
+export function getYoutubePageId(): string | null {
+  if (pageId === undefined) {
+    try {
+      pageId = globalThis.localStorage?.getItem(PAGE_ID_STORAGE_KEY) ?? null;
+    } catch {
+      pageId = null;
+    }
+  }
+  return pageId;
+}
+
+export function selectYoutubePageId(next: string | null): void {
+  if (next === getYoutubePageId()) return;
+  storePageId(next);
+  notifyChanged();
+}
+
+export function getYoutubeSessionKey(): string | null {
+  const tokens = getYoutubeAuthTokens();
+  if (!tokens) return null;
+  return `${tokens.refreshToken}:${getYoutubePageId() ?? ""}`;
 }
 
 export function getYoutubeAuthTokens(): YoutubeAuthTokens | null {
@@ -119,6 +158,7 @@ export async function completeYoutubeTvSignIn(
     code,
     signal,
   );
+  storePageId(null);
   save(tokens);
   return tokens;
 }
@@ -161,6 +201,7 @@ export async function getYoutubeAuthorization(
 
 export async function signOutYoutube(): Promise<void> {
   const current = getYoutubeAuthTokens();
+  storePageId(null);
   save(null);
   if (!current) return;
   await fetch(
