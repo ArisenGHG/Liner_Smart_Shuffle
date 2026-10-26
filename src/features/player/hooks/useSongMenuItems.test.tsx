@@ -156,4 +156,18 @@ describe("useSongMenuItems", () => {
       "https://link.tryliner.fun/album?id=album-789"
     );
   });
+
+  it("adds a remove-from-queue entry only for queue rows", () => {
+    const onRemoveFromQueue = vi.fn();
+    const entry = renderHookHelper({ id: "t1", title: "Demo", artists: "Me", coverUrl: "", onRemoveFromQueue })().find(
+      (item) => item.id === "remove-from-queue",
+    );
+    expect(entry?.label).toBe("common.remove_from_queue");
+    expect(entry?.danger).toBe(true);
+    act(() => entry?.onClick?.());
+    expect(onRemoveFromQueue).toHaveBeenCalledTimes(1);
+
+    const elsewhere = renderHookHelper({ id: "t1", title: "Demo", artists: "Me", coverUrl: "" })();
+    expect(elsewhere.map((item) => item.id)).not.toContain("remove-from-queue");
+  });
 });
