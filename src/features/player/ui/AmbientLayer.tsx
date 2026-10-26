@@ -34,7 +34,7 @@ function AmbientCanvas({ script }: AmbientCanvasProps) {
     <div
       ref={hostRef}
       aria-hidden
-      className="pointer-events-none absolute inset-0 opacity-80 blur-[1.5px]"
+      className="pointer-events-none absolute inset-0 opacity-80 blur-[1.5px] [mask-image:linear-gradient(to_right,black_30%,rgba(0,0,0,0.12)_62%)]"
     />
   );
 }
