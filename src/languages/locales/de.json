@@ -722,11 +722,6 @@
     },
     "connection": {
       "open_folder": "Speicherort öffnen"
-    },
-    "cover_glow": {
-      "title": "Cover-Leuchten",
-      "description": "Unscharfes Cover-Leuchten hinter Seiten. Ausschalten für einen schlichten Hintergrund.",
-      "disabled_for_light": "Im hellen Design aus."
     }
   },
   "toast": {
@@ -874,6 +869,7 @@
   "track_sort": {
     "label": "Sortieren",
     "default": "Standard",
+    "added": "Nach Hinzufügedatum",
     "title": "Nach Titel (A–Z)",
     "duration": "Nach Dauer",
     "popularity": "Nach Beliebtheit"

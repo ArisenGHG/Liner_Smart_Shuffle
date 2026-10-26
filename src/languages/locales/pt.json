@@ -840,11 +840,6 @@
     },
     "connection": {
       "open_folder": "Abrir local salvo"
-    },
-    "cover_glow": {
-      "title": "Brilho da capa",
-      "description": "Brilho desfocado da capa atrás das páginas. Desative para um fundo simples.",
-      "disabled_for_light": "Desativado no tema claro."
     }
   },
   "toast": {
@@ -995,6 +990,7 @@
   "track_sort": {
     "label": "Ordenar",
     "default": "Padrão",
+    "added": "Por data de adição",
     "title": "Por título (A–Z)",
     "duration": "Por duração",
     "popularity": "Por popularidade"

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import PageCoverBackdrop from "./PageCoverBackdrop";
 import { useActiveBackgroundCover } from "../hooks/useActiveBackgroundCover";
 
@@ -15,11 +15,13 @@ export function DynamicBlurBackground({
 }: DynamicBlurBackgroundProps) {
   const { effectiveCoverSrc, pageBackdropOptions } = useActiveBackgroundCover();
 
-  if (!effectiveCoverSrc) return null;
+  const [hasShownCover, setHasShownCover] = useState(false);
+  if (effectiveCoverSrc && !hasShownCover) setHasShownCover(true);
+  if (!effectiveCoverSrc && !hasShownCover) return null;
 
   return (
     <PageCoverBackdrop
-      coverSrc={effectiveCoverSrc}
+      coverSrc={effectiveCoverSrc ?? null}
       isDark={isDark}
       blur={pageBackdropOptions?.blur}
       dim={pageBackdropOptions?.dim}

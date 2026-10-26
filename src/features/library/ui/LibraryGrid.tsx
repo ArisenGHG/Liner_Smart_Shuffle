@@ -1,6 +1,8 @@
 import { useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useStableNavigate } from "@/shared/hooks/useStableNavigate";
 import AlbumCard from "@/features/collection/ui/AlbumCard";
+import { collectionPreviewState } from "@/features/collection/lib/collectionPreview";
+import { prefetchCollection } from "@/features/collection/hooks/useCollection";
 import PlaylistCard from "./PlaylistCard";
 import SourceBadge from "./SourceBadge";
 import CoverImage from "@/features/covers/ui/CoverImage";
@@ -26,6 +28,22 @@ interface LibraryGridProps {
   prependNode?: React.ReactNode;
 }
 
+function collectionLink(item: LibraryItemViewModel) {
+  const kind =
+    item.kind === "album" || item.kind === "playlist" ? item.kind : null;
+  if (!kind || !item.href.startsWith("/collection?")) {
+    return { state: undefined, prefetch: undefined };
+  }
+  return {
+    state: collectionPreviewState({
+      coverUrl: item.imageUrl || undefined,
+      title: item.title,
+      subtitle: item.subtitle,
+    }),
+    prefetch: () => prefetchCollection(kind, item.id),
+  };
+}
+
 function LoadingSkeletonGrid({ circle = false }: { circle?: boolean }) {
   return (
     <div className="flex flex-col gap-[8px]">
@@ -48,6 +66,31 @@ function LoadingSkeletonList() {
         <div className="h-[14px] w-[35%] animate-pulse rounded bg-border-alpha-33" />
         <div className="h-[12px] w-[20%] animate-pulse rounded bg-border-alpha-14" />
       </div>
+    </div>
+  );
+}
+
+export function LibraryGridSkeleton({
+  viewMode = "grid",
+  count = 12,
+}: {
+  viewMode?: LibraryViewMode;
+  count?: number;
+}) {
+  if (viewMode === "list") {
+    return (
+      <div className="flex flex-col gap-[4px] pb-[24px] -mx-[8px]">
+        {Array.from({ length: count }, (_, index) => (
+          <LoadingSkeletonList key={index} />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-[24px] pb-[24px]">
+      {Array.from({ length: count }, (_, index) => (
+        <LoadingSkeletonGrid key={index} />
+      ))}
     </div>
   );
 }
@@ -99,6 +142,7 @@ function useItemMenuItems(item: LibraryItemViewModel): DropdownMenuItem[] {
 
 function LibraryItemCard({ item }: { item: LibraryItemViewModel }) {
   const menuItems = useItemMenuItems(item);
+  const link = collectionLink(item);
 
   if (item.kind === "album") {
     return (
@@ -122,6 +166,8 @@ function LibraryItemCard({ item }: { item: LibraryItemViewModel }) {
       coverUrls={item.coverUrls}
       variant={item.kind === "artist" ? "artist" : "playlist"}
       href={item.href}
+      linkState={link.state}
+      onPointerDown={link.prefetch}
       badge={<SourceBadge source={item.source} />}
       menuItems={menuItems}
     />
@@ -130,7 +176,8 @@ function LibraryItemCard({ item }: { item: LibraryItemViewModel }) {
 
 function LibraryItemRow({ item }: { item: LibraryItemViewModel }) {
   const menuItems = useItemMenuItems(item);
-  const navigate = useNavigate();
+  const link = collectionLink(item);
+  const navigate = useStableNavigate();
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{
@@ -152,7 +199,8 @@ function LibraryItemRow({ item }: { item: LibraryItemViewModel }) {
   return (
     <div
       onContextMenu={handleContextMenu}
-      onClick={() => navigate(item.href)}
+      onPointerDown={link.prefetch}
+      onClick={() => navigate(item.href, link.state)}
       className="w-full flex items-center justify-between rounded-md p-[8px] outline-none transition-colors duration-150 ease-out cursor-pointer hover:bg-border-alpha-14 select-none"
     >
       <div className="flex items-center gap-[16px] min-w-0">

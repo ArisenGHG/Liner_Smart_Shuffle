@@ -777,11 +777,6 @@
     },
     "connection": {
       "open_folder": "Apri la posizione di salvataggio"
-    },
-    "cover_glow": {
-      "title": "Bagliore copertina",
-      "description": "Bagliore sfocato della copertina dietro le pagine. Disattiva per uno sfondo semplice.",
-      "disabled_for_light": "Disattivato nel tema chiaro."
     }
   },
   "toast": {
@@ -930,6 +925,7 @@
   "track_sort": {
     "label": "Ordina",
     "default": "Predefinito",
+    "added": "Per data di aggiunta",
     "title": "Per titolo (A–Z)",
     "duration": "Per durata",
     "popularity": "Per popolarità"

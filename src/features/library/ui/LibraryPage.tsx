@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import LibraryControls from "./LibraryControls";
-import LibraryGrid from "./LibraryGrid";
+import LibraryGrid, { LibraryGridSkeleton } from "./LibraryGrid";
 import LibraryTabs from "./LibraryTabs";
 import type {
   LibraryItemViewModel,
@@ -424,17 +424,15 @@ export default function LibraryPage() {
             </div>
           ) : null}
           {initialLoading ? (
-            <div className="flex items-center justify-center min-h-[50vh]">
-              <div className="h-[24px] w-[24px] animate-spin rounded-full border-[2px] border-text-tertiary border-t-text-secondary" />
-            </div>
+            <LibraryGridSkeleton viewMode={viewMode} />
           ) : (
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`${activeTab}:${debouncedQuery || "all"}:${viewMode}`}
-                initial={{ opacity: 0, filter: "blur(4px)", y: 6 }}
-                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                exit={{ opacity: 0, filter: "blur(4px)", y: -4 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12, ease: "easeOut" }}
               >
                 <LibraryGrid
                   items={visibleItems}

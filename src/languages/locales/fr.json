@@ -878,11 +878,6 @@
     "connection": {
       "open_folder": "Ouvrir l'emplacement"
     },
-    "cover_glow": {
-      "title": "Halo de pochette",
-      "description": "Halo flouté de la pochette derrière les pages. Désactivez pour un fond uni.",
-      "disabled_for_light": "Désactivé en thème clair."
-    },
     "youtube": {
       "description": "Connectez-vous à votre compte YouTube pour éviter les erreurs de lecture.",
       "section_playback": "Lecture",
@@ -1101,6 +1096,7 @@
   "track_sort": {
     "label": "Trier",
     "default": "Par défaut",
+    "added": "Par date d'ajout",
     "title": "Par titre (A–Z)",
     "duration": "Par durée",
     "popularity": "Par popularité"

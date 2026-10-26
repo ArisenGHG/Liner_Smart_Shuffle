@@ -10,7 +10,12 @@ import WindowControls, {
 import logo from "@/assets/logo.svg";
 import { cn } from "@/shared/lib";
 
-const BACK_BUTTON_ROUTES = ["/library/playlist", "/artist", "/collection"];
+const BACK_BUTTON_ROUTES = [
+  "/library/playlist",
+  "/library/local",
+  "/artist",
+  "/collection",
+];
 
 function BackButton() {
   const navigate = useNavigate();

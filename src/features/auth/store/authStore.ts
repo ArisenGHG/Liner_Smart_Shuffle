@@ -11,6 +11,7 @@ import {
 } from "@/shared/api";
 import { playerEngine } from "@/features/player";
 import { queryCache } from "@/shared/cache/queryCache";
+import { clearScreenCache } from "@/shared/cache/screenCache";
 
 export type AuthStatus = "initializing" | "authenticated" | "anonymous";
 export type AuthState = {
@@ -139,6 +140,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     await clearAuthSession();
     queryCache.clear();
+    clearScreenCache();
     set({ status: "anonymous", user: null });
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("library:changed"));

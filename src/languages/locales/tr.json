@@ -777,11 +777,6 @@
     },
     "connection": {
       "open_folder": "Kaydedilen konumu aç"
-    },
-    "cover_glow": {
-      "title": "Kapak parıltısı",
-      "description": "Sayfaların arkasında bulanık kapak parıltısı. Düz arka plan için kapatın.",
-      "disabled_for_light": "Açık temada kapalı."
     }
   },
   "toast": {
@@ -930,6 +925,7 @@
   "track_sort": {
     "label": "Sırala",
     "default": "Varsayılan",
+    "added": "Eklenme tarihine göre",
     "title": "Başlığa göre (A–Z)",
     "duration": "Süreye göre",
     "popularity": "Popülerliğe göre"

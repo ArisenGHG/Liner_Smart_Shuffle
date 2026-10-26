@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   useCallback,
   useEffect,
@@ -45,6 +45,7 @@ import { useModalStore } from "@/features/library";
 import { buildShareUrl } from "@/shared/utils/share";
 import { useExternalItems } from "@/features/library/hooks";
 import { useCollection } from "../hooks/useCollection";
+import { readCollectionPreview } from "../lib/collectionPreview";
 import {
   useTrackSearch,
   TrackSearchField,
@@ -61,10 +62,12 @@ function CollectionContent() {
   const id = searchParams.get("id");
   const { t } = useTranslation();
 
+  const location = useLocation();
+  const preview = readCollectionPreview(location.state);
   const { data, loading } = useCollection(type, id);
   const classicSurfaces = useClassicSurfaces();
   usePageBackdrop(
-    data?.coverUrl,
+    preview?.coverUrl || data?.coverUrl,
     type === "playlist" ? { dim: 0.05 } : undefined,
   );
   const isSingleArtistAlbum = useMemo(() => {
@@ -574,7 +577,7 @@ function CollectionContent() {
             }`}
             onTransitionEnd={() => setSkeletonExited(true)}
           >
-            <CollectionPageSkeleton isAlbum={isAlbum} />
+            <CollectionPageSkeleton isAlbum={isAlbum} preview={preview} />
           </div>
         )}
       </div>

@@ -852,11 +852,6 @@
     },
     "connection": {
       "open_folder": "Buka lokasi penyimpanan"
-    },
-    "cover_glow": {
-      "title": "Cahaya sampul",
-      "description": "Cahaya buram dari sampul di belakang halaman. Matikan untuk latar polos.",
-      "disabled_for_light": "Nonaktif di tema terang."
     }
   },
   "toast": {

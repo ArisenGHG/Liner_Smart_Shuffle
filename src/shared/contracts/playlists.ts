@@ -29,6 +29,8 @@ export interface UserPlaylist {
   createdAt: string;
   updatedAt: string;
   revision: number;
+  trackCount?: number;
+  coverUrls?: string[];
   ownerId?: string;
   owner?: {
     id: string;

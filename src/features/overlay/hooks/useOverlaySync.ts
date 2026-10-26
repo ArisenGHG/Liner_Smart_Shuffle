@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { usePlayerState } from "@/features/player/hooks/usePlayerState";
+import { useEffect, useRef, useState } from "react";
 import { playerEngine } from "@/features/player/engine/playerEngine";
 import { usePlayerStore } from "@/features/player/store/playerStore";
 import {
@@ -14,17 +13,32 @@ import { showToast } from "@/shared/ui/Toast";
 import type { OverlayAction, OverlayStatePayload } from "../contracts";
 import { useOverlaySettingsStore } from "../store/overlaySettingsStore";
 
+const PLAYING_RESYNC_DRIFT_MS = 1_500;
+const PAUSED_RESYNC_DRIFT_MS = 250;
+
+interface SentPosition {
+  positionMs: number;
+  at: number;
+  rate: number;
+  playing: boolean;
+}
+
 export function useOverlaySync() {
   const authStatus = useAuthStore((s) => s.status);
   const isAuthenticated =
     authStatus === "authenticated" || Boolean(getAuthSession());
-  const player = usePlayerState();
-  const currentTrack = player.currentTrack;
+  const status = usePlayerStore((s) => s.status);
+  const currentTrack = usePlayerStore((s) => s.currentTrack);
+  const durationMs = usePlayerStore((s) => s.durationMs);
+  const volume = usePlayerStore((s) => s.volume);
+  const playbackRate = usePlayerStore((s) => s.playbackRate);
   const effectiveCover = useCoverSrc(currentTrack?.coverUrl);
   const isLiked = useIsTrackLiked(currentTrack?.id);
   const likeMutation = useLikeTrack();
   const unlikeMutation = useUnlikeTrack();
   const isTogglingLikeRef = useRef(false);
+  const sentPositionRef = useRef<SentPosition | null>(null);
+  const [seekTick, setSeekTick] = useState(0);
 
   // Sync auth status to Electron overlay manager
   useEffect(() => {
@@ -153,7 +167,24 @@ export function useOverlaySync() {
     return cleanup;
   }, [currentTrack, isLiked, likeMutation, unlikeMutation]);
 
-  // Push updates to overlay
+  useEffect(() => {
+    return usePlayerStore.subscribe((state, prev) => {
+      if (state.positionMs === prev.positionMs) return;
+      const sent = sentPositionRef.current;
+      if (!sent) return;
+      const expected = sent.playing
+        ? sent.positionMs + (Date.now() - sent.at) * sent.rate
+        : sent.positionMs;
+      const allowedDrift = sent.playing
+        ? PLAYING_RESYNC_DRIFT_MS
+        : PAUSED_RESYNC_DRIFT_MS;
+      if (Math.abs(state.positionMs - expected) > allowedDrift) {
+        sentPositionRef.current = null;
+        setSeekTick((t) => t + 1);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (!window.linerElectron?.overlayUpdateState) return;
     if (!isAuthenticated) return;
@@ -175,8 +206,12 @@ export function useOverlaySync() {
         : "") ||
       "";
 
+    const positionMs = usePlayerStore.getState().positionMs;
+    const positionAt = Date.now();
+    const rate = playbackRate > 0 ? playbackRate : 1;
+
     const payload: OverlayStatePayload = {
-      status: player.status,
+      status,
       track: currentTrack
         ? {
             id: currentTrack.id,
@@ -188,24 +223,33 @@ export function useOverlaySync() {
                 : currentTrack.album?.title,
             cover: effectiveCover || currentTrack.coverUrl,
             coverUrl: effectiveCover || currentTrack.coverUrl,
-            durationMs: currentTrack.durationMs || player.durationMs,
+            durationMs: currentTrack.durationMs || durationMs,
           }
         : null,
-      positionMs: player.positionMs,
-      durationMs: player.durationMs,
-      volume: player.volume,
+      positionMs,
+      positionAt,
+      playbackRate: rate,
+      durationMs,
+      volume,
       isLiked,
     };
 
+    sentPositionRef.current = {
+      positionMs,
+      at: positionAt,
+      rate,
+      playing: status === "playing",
+    };
     window.linerElectron.overlayUpdateState(payload);
   }, [
     isAuthenticated,
-    player.status,
-    player.positionMs,
-    player.durationMs,
-    player.volume,
+    status,
+    durationMs,
+    volume,
+    playbackRate,
     currentTrack,
     effectiveCover,
     isLiked,
+    seekTick,
   ]);
 }

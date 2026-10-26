@@ -105,6 +105,7 @@ const CRASH_WINDOW_MS = 60_000;
 const MAX_CRASHES_PER_WINDOW = 3;
 const PRIME_PAINT_WAIT_MS = 600;
 const PRIME_SETTLE_MS = 50;
+const IDLE_DESTROY_MS = 3 * 60_000;
 
 function waitForFrame(win: BrowserWindow, timeoutMs: number): Promise<void> {
   const painted = win.webContents
@@ -151,6 +152,7 @@ export class OverlayManager {
   private pendingShow = false;
   private readyWaiters: Array<() => void> = [];
   private warmTimer: NodeJS.Timeout | null = null;
+  private idleTimer: NodeJS.Timeout | null = null;
   private readyFallbackTimer: NodeJS.Timeout | null = null;
   private revealFallbackTimer: NodeJS.Timeout | null = null;
   private crashTimes: number[] = [];
@@ -611,6 +613,7 @@ export class OverlayManager {
     beforeShow: (win: BrowserWindow) => void,
   ): Promise<BrowserWindow | null> {
     if (this.disposed || !this.isAuthenticated || !this.enabled) return null;
+    this.cancelIdleDestroy();
     if (this.closeTimeout) {
       clearTimeout(this.closeTimeout);
       this.closeTimeout = null;
@@ -725,6 +728,7 @@ export class OverlayManager {
 
   public showOverlay() {
     if (this.disposed || !this.isAuthenticated || !this.enabled) return;
+    this.cancelIdleDestroy();
 
     if (this.closeTimeout) {
       clearTimeout(this.closeTimeout);
@@ -790,13 +794,62 @@ export class OverlayManager {
   }
 
   private scheduleWarm() {
-    if (this.disposed || !this.isAuthenticated || !this.enabled) return;
+    if (
+      this.disposed ||
+      !this.isAuthenticated ||
+      !this.enabled ||
+      !this.autoShowOnMinimize
+    )
+      return;
     if (this.overlayWindow && !this.overlayWindow.isDestroyed()) return;
     if (this.warmTimer) return;
     this.warmTimer = setTimeout(() => {
       this.warmTimer = null;
+      if (!this.autoShowOnMinimize) return;
       this.ensureWindow();
     }, WARM_DELAY_MS);
+  }
+
+  private isOnScreen(): boolean {
+    return Boolean(
+      this.overlayWindow &&
+      !this.overlayWindow.isDestroyed() &&
+      this.wantVisible,
+    );
+  }
+
+  private cancelIdleDestroy() {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+  }
+
+  private scheduleIdleDestroy() {
+    this.cancelIdleDestroy();
+    if (
+      this.autoShowOnMinimize ||
+      !this.overlayWindow ||
+      this.overlayWindow.isDestroyed()
+    )
+      return;
+    this.idleTimer = setTimeout(() => {
+      this.idleTimer = null;
+      const win = this.overlayWindow;
+      if (
+        !win ||
+        win.isDestroyed() ||
+        this.autoShowOnMinimize ||
+        this.wantVisible ||
+        this.pendingShow
+      )
+        return;
+      this.overlayWindow = null;
+      this.resetContentReady();
+      try {
+        win.destroy();
+      } catch {}
+    }, IDLE_DESTROY_MS);
   }
 
   private markContentReady() {
@@ -840,10 +893,12 @@ export class OverlayManager {
       this.warmTimer,
       this.readyFallbackTimer,
       this.revealFallbackTimer,
+      this.idleTimer,
     ]) {
       if (timer) clearTimeout(timer);
     }
     this.warmTimer = null;
+    this.idleTimer = null;
     this.readyFallbackTimer = null;
     this.revealFallbackTimer = null;
   }
@@ -919,6 +974,7 @@ export class OverlayManager {
         this.overlayWindow.hide();
       }
     }
+    this.scheduleIdleDestroy();
   }
 
   private applyAlwaysOnTop() {
@@ -1077,8 +1133,8 @@ export class OverlayManager {
       if (!this.isAuthenticated) return;
       this.latestState = state;
 
-      if (this.overlayWindow && !this.overlayWindow.isDestroyed()) {
-        this.overlayWindow.webContents.send("overlay:state", state);
+      if (this.isOnScreen()) {
+        this.overlayWindow!.webContents.send("overlay:state", state);
       }
     });
 
@@ -1193,6 +1249,12 @@ export class OverlayManager {
 
         if (typeof settings.autoShowOnMinimize === "boolean") {
           this.autoShowOnMinimize = settings.autoShowOnMinimize;
+          if (this.autoShowOnMinimize) {
+            this.cancelIdleDestroy();
+            this.scheduleWarm();
+          } else if (!this.isOnScreen()) {
+            this.scheduleIdleDestroy();
+          }
         }
 
         if (typeof settings.alwaysOnTop === "boolean") {

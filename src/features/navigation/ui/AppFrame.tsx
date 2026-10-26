@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -8,6 +9,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  collectionPath,
+  collectionPreviewState,
+} from "@/features/collection/lib/collectionPreview";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Search3Line,
@@ -22,8 +27,8 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { cn } from "@/shared/lib";
 import WindowControls from "./WindowControls";
-import PageTransition from "./PageTransition";
 import RightDrawer from "./RightDrawer";
+import { FullscreenRouteContext } from "../fullscreenRouteContext";
 import DynamicBlurBackground from "./DynamicBlurBackground";
 import AmbientTopGlow from "./AmbientTopGlow";
 import { useGlobalShortcuts } from "../hooks/useGlobalShortcuts";
@@ -80,6 +85,25 @@ const LEGACY_LAYOUT_STORAGE_KEYS = [
   "liner_sidebar_width",
   "liner_queue_popup_open",
 ] as const;
+
+const AppOverlays = memo(function AppOverlays() {
+  return (
+    <>
+      <AddToPlaylistModal />
+      <AddToLibraryModal />
+      <RemoveFromPlaylistModal />
+      <RemoveFromLibraryModal />
+      <ImportLikesModal />
+      <CreatePlaylistModal />
+      <ImportReviewModal />
+      <LocalDropZone />
+      <SettingsModal />
+      <UpdateModal />
+      <YoutubeSignInNotice />
+      <UpdateToastBridge />
+    </>
+  );
+});
 
 export default function AppFrame({ children }: AppFrameProps) {
   const location = useLocation();
@@ -154,14 +178,8 @@ export default function AppFrame({ children }: AppFrameProps) {
   }, [pathname, search, searchOpen, searchQuery, closeSearch]);
 
   useLayoutEffect(() => {
-    if (mainScrollRef.current) {
-      mainScrollRef.current.scrollTop = 0;
-      const innerScrollables =
-        mainScrollRef.current.querySelectorAll(".overflow-y-auto");
-      innerScrollables.forEach((el) => {
-        el.scrollTop = 0;
-      });
-    }
+    const main = mainScrollRef.current;
+    if (main && main.scrollTop !== 0) main.scrollTop = 0;
   }, [pathname, search]);
 
   const updateSearchMask = useCallback(() => {
@@ -262,6 +280,7 @@ export default function AppFrame({ children }: AppFrameProps) {
   const isBackNavigableRoute =
     pathname === "/artist" ||
     pathname === "/library/playlist" ||
+    pathname === "/library/local" ||
     pathname === "/collection";
   const handleEscapeFallback = useCallback(() => {
     if (queuePopupOpen || searchOpen || isFullscreenPlayer) return false;
@@ -628,7 +647,13 @@ export default function AppFrame({ children }: AppFrameProps) {
           coverUrl: it.coverUrl,
           itemData: it,
         });
-        navigate(`/collection?type=playlist&id=${encodeURIComponent(it.id)}`);
+        navigate(collectionPath("playlist", it.id), {
+          state: collectionPreviewState({
+            coverUrl: it.coverUrl,
+            title: it.name || it.title,
+            subtitle: it.author || it.owner,
+          }),
+        });
       } else if (
         it._type === "album" ||
         it.totalTracks !== undefined ||
@@ -643,7 +668,13 @@ export default function AppFrame({ children }: AppFrameProps) {
           coverUrl: it.coverUrl,
           itemData: it,
         });
-        navigate(`/collection?type=album&id=${encodeURIComponent(it.id)}`);
+        navigate(collectionPath("album", it.id), {
+          state: collectionPreviewState({
+            coverUrl: it.coverUrl,
+            title: it.name || it.title,
+            subtitle: it.artists || it.artist,
+          }),
+        });
       }
     },
     [activeFilter, closeSearch, navigate, addHistoryItem, t],
@@ -684,7 +715,7 @@ export default function AppFrame({ children }: AppFrameProps) {
   return (
     <div
       ref={appFrameRef}
-      className={`relative flex flex-col h-full w-full overflow-hidden p-1.5 gap-1.5 ${
+      className={`app-shell-enter relative flex flex-col h-full w-full overflow-hidden p-1.5 gap-1.5 ${
         isFullscreenPlayer ? "bg-black" : "bg-bg-canvas"
       } ${isEdgeToEdge ? "rounded-none" : "rounded-[12px]"}`}
       onScroll={(e) => {
@@ -747,9 +778,9 @@ export default function AppFrame({ children }: AppFrameProps) {
                   : "overflow-y-auto"
               }`}
             >
-              <PageTransition>
+              <div className="h-full w-full">
                 {isFullscreenRoute ? shellChildrenRef.current : children}
-              </PageTransition>
+              </div>
             </div>
 
             <AnimatePresence>
@@ -827,7 +858,9 @@ export default function AppFrame({ children }: AppFrameProps) {
             data-theme="dark"
             className="dark absolute inset-0 z-[70] overflow-hidden rounded-[inherit] bg-black"
           >
-            {children}
+            <FullscreenRouteContext.Provider value>
+              {children}
+            </FullscreenRouteContext.Provider>
           </div>
         ) : null}
       </AnimatePresence>
@@ -1060,18 +1093,7 @@ export default function AppFrame({ children }: AppFrameProps) {
         )}
       </AnimatePresence>
 
-      <AddToPlaylistModal />
-      <AddToLibraryModal />
-      <RemoveFromPlaylistModal />
-      <RemoveFromLibraryModal />
-      <ImportLikesModal />
-      <CreatePlaylistModal />
-      <ImportReviewModal />
-      <LocalDropZone />
-      <SettingsModal />
-      <UpdateModal />
-      <YoutubeSignInNotice />
-      <UpdateToastBridge />
+      <AppOverlays />
       <AnimatePresence>
         {isFullscreenPlayer && (
           <motion.div

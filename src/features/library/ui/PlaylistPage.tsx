@@ -175,6 +175,7 @@ function LibraryPlaylistContent() {
         playlistDetail.coverUrls ??
         (playlistDetail.coverUrl ? [playlistDetail.coverUrl] : []),
       tracks: playlistDetail.tracks,
+      durationMs: playlistDetail.durationMs,
       revision: playlistDetail.revision,
     };
   })();
@@ -641,10 +642,12 @@ function LibraryPlaylistContent() {
                         />
                         <span>
                           {(() => {
-                            const totalMs = viewData.tracks.reduce(
-                              (acc, t) => acc + (t.durationMs || 0),
-                              0,
-                            );
+                            const totalMs =
+                              viewData.durationMs ??
+                              viewData.tracks.reduce(
+                                (acc, t) => acc + (t.durationMs || 0),
+                                0,
+                              );
                             const totalMins = Math.floor(totalMs / 60000);
                             if (totalMins > 60) {
                               return `${Math.floor(totalMins / 60)} ${t("playlist.hr")} ${totalMins % 60} ${t("playlist.min")}`;

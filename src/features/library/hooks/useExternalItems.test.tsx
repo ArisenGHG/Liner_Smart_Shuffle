@@ -11,6 +11,7 @@ vi.mock("@/shared/api", () => ({
   api: { listSavedCollections: vi.fn() },
   mediaUrl: (url: string) => url,
   toMaxQualityAvatarUrl: (url: string) => url,
+  getAuthSession: () => null,
 }));
 
 const artistsResponse = {

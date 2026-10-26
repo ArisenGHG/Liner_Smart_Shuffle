@@ -4,6 +4,7 @@ import {
   getAuthSession,
   mediaUrl,
   toClientTrack,
+  type ApiUserPlaylist,
   type ApiUserPlaylistItem,
 } from "@/shared/api";
 import { queryCache } from "@/shared/cache/queryCache";
@@ -30,7 +31,11 @@ export interface LibraryPlaylistDetail {
   coverUrls: string[];
   revision: number;
   tracks: Track[];
+  durationMs?: number;
+  partial?: boolean;
 }
+
+const FIRST_PAGE_SIZE = 100;
 
 type PlaylistList = { playlists: LibraryPlaylistSummary[]; total: number };
 
@@ -83,6 +88,7 @@ export function evictPlaylistFromCache(id: string) {
     total: Math.max(0, cache.total - 1),
   };
   queryCache.delete(`playlist:detail:${id}`);
+  queryCache.delete(`playlist:etag:${id}`);
   emit();
 }
 
@@ -128,6 +134,23 @@ function load(force = false): Promise<void> {
 
     const playlists = await Promise.all(
       response.items.map(async (playlist) => {
+        if (playlist.trackCount !== undefined && playlist.coverUrls) {
+          const coverUrls = playlist.coverUrls
+            .map((url) => mediaUrl(url))
+            .filter(Boolean);
+          coverCache[playlist.id] = {
+            coverUrls,
+            trackCount: playlist.trackCount,
+            updatedAt: playlist.updatedAt,
+          };
+          return {
+            ...playlist,
+            trackCount: playlist.trackCount,
+            coverUrl: coverUrls[0] ?? "",
+            coverUrls,
+          };
+        }
+
         const cached = coverCache[playlist.id];
 
         if (cached && cached.updatedAt === playlist.updatedAt) {
@@ -197,6 +220,7 @@ function toTrack(item: ApiUserPlaylistItem): Track {
   return {
     ...base,
     playlistItemId: item.id,
+    addedAt: item.addedAt,
   };
 }
 
@@ -210,6 +234,42 @@ export function usePlaylistsList() {
     void load();
   }, []);
   return state;
+}
+
+function toDetail(
+  playlist: ApiUserPlaylist,
+  items: ApiUserPlaylistItem[],
+  trackCount: number,
+  durationMs: number,
+  partial: boolean,
+): LibraryPlaylistDetail {
+  const covers = extractCovers(items);
+  return {
+    id: playlist.id,
+    title: playlist.title,
+    description: playlist.description,
+    trackCount,
+    coverUrl: covers[0] ?? "",
+    coverUrls: covers,
+    revision: playlist.revision,
+    tracks: items.map(toTrack),
+    durationMs,
+    ...(partial ? { partial: true } : {}),
+  };
+}
+
+function rememberCovers(
+  id: string,
+  detail: LibraryPlaylistDetail,
+  updatedAt: string,
+) {
+  const coverCache = readCoverCache();
+  coverCache[id] = {
+    coverUrls: detail.coverUrls,
+    trackCount: detail.trackCount,
+    updatedAt,
+  };
+  writeCoverCache(coverCache);
 }
 
 export function usePlaylist(id: string | null) {
@@ -240,34 +300,51 @@ export function usePlaylist(id: string | null) {
     }
     let active = true;
 
+    const etagKey = `playlist:etag:${id}`;
+    let complete = false;
+
+    const fetchFirstPage = async () => {
+      try {
+        const response = await api.readUserPlaylist(id, {
+          limit: FIRST_PAGE_SIZE,
+        });
+        if (!active || complete || response.notModified) return;
+        const detail = toDetail(
+          response.playlist,
+          response.items,
+          response.trackCount,
+          response.durationMs,
+          response.partial,
+        );
+        setData(detail);
+        setIsLoading(false);
+      } catch {}
+    };
+
     const fetchDetail = async (isBackground = false) => {
       if (!isBackground && !queryCache.get(cacheKey)) setIsLoading(true);
+      const etag = queryCache.get(cacheKey)
+        ? queryCache.get<string>(etagKey)
+        : undefined;
       try {
-        const response = await api.getUserPlaylist(id);
+        const response = await api.readUserPlaylist(id, { etag });
         if (!active) return;
+        complete = true;
+        if (response.notModified) return;
 
-        const covers = extractCovers(response.items);
-
-        const coverCache = readCoverCache();
-        coverCache[id] = {
-          coverUrls: covers,
-          trackCount: response.items.length,
-          updatedAt: response.playlist.updatedAt,
-        };
-        writeCoverCache(coverCache);
-
-        const detail: LibraryPlaylistDetail = {
-          id: response.playlist.id,
-          title: response.playlist.title,
-          description: response.playlist.description,
-          trackCount: response.items.length,
-          coverUrl: covers[0] ?? "",
-          coverUrls: covers,
-          revision: response.playlist.revision,
-          tracks: response.items.map(toTrack),
-        };
+        const detail = toDetail(
+          response.playlist,
+          response.items,
+          response.trackCount,
+          response.durationMs,
+          false,
+        );
+        rememberCovers(id, detail, response.playlist.updatedAt);
         queryCache.set(cacheKey, detail);
+        if (response.etag) queryCache.set(etagKey, response.etag);
+        else queryCache.delete(etagKey);
         setData(detail);
+        setError(undefined);
       } catch (err) {
         if (active) setError(err);
       } finally {
@@ -275,6 +352,7 @@ export function usePlaylist(id: string | null) {
       }
     };
 
+    if (!initial) void fetchFirstPage();
     void fetchDetail(Boolean(initial));
     const refresh = () => void fetchDetail(true);
     window.addEventListener("library:changed", refresh);

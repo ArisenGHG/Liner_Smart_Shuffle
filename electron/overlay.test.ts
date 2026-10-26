@@ -4,6 +4,7 @@ const electron = vi.hoisted(() => {
   const { EventEmitter } =
     require("node:events") as typeof import("node:events");
   const ipcOn = new Map<string, (...args: unknown[]) => unknown>();
+  const handlers = new Map<string, (...args: unknown[]) => unknown>();
   const windows: FakeWindow[] = [];
   let nextId = 1;
 
@@ -75,6 +76,7 @@ const electron = vi.hoisted(() => {
   const display = { workArea: { x: 0, y: 0, width: 1920, height: 1080 } };
   return {
     ipcOn,
+    handlers,
     windows,
     FakeWindow,
     module: {
@@ -82,7 +84,8 @@ const electron = vi.hoisted(() => {
       ipcMain: {
         on: (channel: string, handler: (...args: unknown[]) => unknown) =>
           ipcOn.set(channel, handler),
-        handle: () => {},
+        handle: (channel: string, handler: (...args: unknown[]) => unknown) =>
+          handlers.set(channel, handler),
       },
       screen: {
         getPrimaryDisplay: () => display,
@@ -307,5 +310,96 @@ describe("OverlayManager", () => {
     main.emit("minimize");
     await vi.advanceTimersByTimeAsync(5_000);
     expect(overlays()).toHaveLength(0);
+  });
+  it("forwards player state only while the overlay is on screen and replays the latest on show", async () => {
+    const { manager, overlays, ready } = setup();
+    await vi.advanceTimersByTimeAsync(600);
+    const [overlay] = overlays();
+    ready(overlay);
+    await vi.advanceTimersByTimeAsync(1_000);
+    const update = electron.ipcOn.get("overlay:update-state")!;
+    const stateSends = () =>
+      overlay.webContents.send.mock.calls.filter(
+        ([channel]) => channel === "overlay:state",
+      );
+    overlay.webContents.send.mockClear();
+    for (let i = 0; i < 40; i++)
+      update({}, { status: "playing", positionMs: i * 250 });
+    const hiddenForwards = stateSends().length;
+
+    manager.showOverlay();
+    const onShow = stateSends();
+    update({}, { status: "paused", positionMs: 12_000 });
+    const visibleForwards = stateSends().length - onShow.length;
+
+    manager.closeOverlay();
+    await vi.advanceTimersByTimeAsync(100);
+    overlay.webContents.send.mockClear();
+    update({}, { status: "playing", positionMs: 13_000 });
+    process.stdout.write(
+      `[perf] overlay main forwards to hidden window: ${hiddenForwards} of 40 updates\n`,
+    );
+
+    expect(hiddenForwards).toBe(0);
+    expect(onShow).toHaveLength(1);
+    expect(onShow[0][1]).toEqual({ status: "playing", positionMs: 9_750 });
+    expect(visibleForwards).toBe(1);
+    expect(stateSends()).toHaveLength(0);
+    expect(
+      await electron.handlers.get("overlay:get-initial-state")?.(),
+    ).toEqual({ status: "playing", positionMs: 13_000 });
+  });
+
+  it("does not keep a hidden overlay warm when auto-show on minimize is off", async () => {
+    const { overlays } = setup();
+    electron.ipcOn.get("overlay:update-settings")?.(
+      {},
+      { autoShowOnMinimize: false },
+    );
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(overlays()).toHaveLength(0);
+
+    electron.ipcOn.get("overlay:update-settings")?.(
+      {},
+      { autoShowOnMinimize: true },
+    );
+    await vi.advanceTimersByTimeAsync(600);
+    expect(overlays()).toHaveLength(1);
+  });
+
+  it("drops an idle hidden overlay after a few minutes unless it is kept warm", async () => {
+    const { manager, overlays, ready } = setup();
+    electron.ipcOn.get("overlay:update-settings")?.(
+      {},
+      { autoShowOnMinimize: false },
+    );
+    manager.showOverlay();
+    const [overlay] = overlays();
+    ready(overlay);
+    expect(overlay.isVisible()).toBe(true);
+    manager.closeOverlay();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(overlay.isDestroyed()).toBe(false);
+    manager.showOverlay();
+    expect(overlay.isVisible()).toBe(true);
+    manager.closeOverlay();
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(overlay.isDestroyed()).toBe(true);
+
+    manager.showOverlay();
+    const fresh = overlays().find((w) => !w.isDestroyed())!;
+    ready(fresh);
+    expect(fresh.isVisible()).toBe(true);
+  });
+
+  it("keeps the warm overlay around when auto-show on minimize is on", async () => {
+    const { manager, overlays, ready } = setup();
+    await vi.advanceTimersByTimeAsync(600);
+    const [overlay] = overlays();
+    ready(overlay);
+    manager.showOverlay();
+    manager.closeOverlay();
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    expect(overlay.isDestroyed()).toBe(false);
   });
 });

@@ -938,11 +938,6 @@
     },
     "connection": {
       "open_folder": "Open saved location"
-    },
-    "cover_glow": {
-      "title": "Cover glow",
-      "description": "Blurred artwork glow behind pages. Turn off to keep a plain background.",
-      "disabled_for_light": "Off in light theme."
     }
   },
   "toast": {
@@ -1091,6 +1086,7 @@
   "track_sort": {
     "label": "Sort",
     "default": "Default",
+    "added": "By date added",
     "title": "By title (A–Z)",
     "duration": "By duration",
     "popularity": "By popularity"

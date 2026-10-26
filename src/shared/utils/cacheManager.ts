@@ -5,6 +5,7 @@ import {
   MIN_AUDIO_CACHE_LIMIT_BYTES,
 } from "@/shared/storage/audioCache";
 import { queryCache } from "@/shared/cache/queryCache";
+import { clearScreenCache } from "@/shared/cache/screenCache";
 import { lyricsCache } from "@/features/lyrics";
 import { clearCoverRegistry } from "@/features/covers";
 import { useSearchHistoryStore } from "@/features/search/store/searchHistoryStore";
@@ -86,6 +87,7 @@ export async function clearMediaAndCoverCache(): Promise<void> {
  */
 export async function clearSearchAndQueryCache(): Promise<void> {
   queryCache.clear();
+  clearScreenCache();
   try {
     useSearchHistoryStore.getState().clearHistory();
     debouncedStorage.removeItem("liner_search_history");

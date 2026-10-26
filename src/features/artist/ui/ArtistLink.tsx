@@ -6,7 +6,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useStableNavigate } from "@/shared/hooks/useStableNavigate";
 import type { TrackArtist } from "@/shared/types";
 
 export interface ArtistLinkProps {
@@ -30,7 +30,7 @@ export default function ArtistLink({
   onNavigate,
   plain = false,
 }: ArtistLinkProps) {
-  const navigate = useNavigate();
+  const navigate = useStableNavigate();
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const [delta, setDelta] = useState(0);

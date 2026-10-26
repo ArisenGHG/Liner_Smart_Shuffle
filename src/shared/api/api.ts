@@ -184,6 +184,7 @@ async function executeRequest<T>(
   init?: RequestInit,
   allowRefresh = true,
   timeoutMs = DEFAULT_TIMEOUT_MS,
+  onResponse?: (res: Response) => void,
 ): Promise<T> {
   const startTime = performance.now();
   const method = (init?.method ?? "GET").toUpperCase();
@@ -356,6 +357,8 @@ async function executeRequest<T>(
 
   const durationMs = Math.round(performance.now() - startTime);
   telemetry.trackNetwork(method, path, res.status, durationMs, requestId);
+  onResponse?.(res);
+  if (res.status === 304) return undefined as unknown as T;
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as Record<
@@ -399,6 +402,18 @@ async function executeRequest<T>(
   if (res.status === 204) return undefined as unknown as T;
   return res.json() as Promise<T>;
 }
+
+export type UserPlaylistRead =
+  | { notModified: true }
+  | {
+      notModified: false;
+      etag?: string;
+      partial: boolean;
+      trackCount: number;
+      durationMs: number;
+      playlist: ApiUserPlaylist;
+      items: ApiUserPlaylistItem[];
+    };
 
 async function request<T>(
   path: string,
@@ -824,6 +839,50 @@ export const api = {
 
   listPlaylists(): Promise<{ items: ApiUserPlaylist[] }> {
     return request<{ items: ApiUserPlaylist[] }>("/v1/me/playlists");
+  },
+
+  async readUserPlaylist(
+    id: string,
+    options: { limit?: number; etag?: string } = {},
+  ): Promise<UserPlaylistRead> {
+    const params = new URLSearchParams({ compact: "true" });
+    if (options.limit) params.set("limit", String(options.limit));
+    let status = 200;
+    let etag: string | undefined;
+    const body = await executeRequest<
+      | {
+          playlist: ApiUserPlaylist;
+          items: ApiUserPlaylistItem[];
+          trackCount?: number;
+          durationMs?: number;
+          partial?: boolean;
+        }
+      | undefined
+    >(
+      `/v1/me/playlists/${encodeURIComponent(id)}?${params}`,
+      options.etag ? { headers: { "If-None-Match": options.etag } } : undefined,
+      true,
+      DEFAULT_TIMEOUT_MS,
+      (res) => {
+        status = res.status;
+        etag = res.headers?.get?.("etag") ?? undefined;
+      },
+    );
+    if (status === 304 || !body) return { notModified: true };
+    return {
+      notModified: false,
+      etag,
+      partial: body.partial === true,
+      trackCount: body.trackCount ?? body.items.length,
+      durationMs:
+        body.durationMs ??
+        body.items.reduce(
+          (sum, item) => sum + (item.track?.durationMs || 0),
+          0,
+        ),
+      playlist: body.playlist,
+      items: body.items,
+    };
   },
 
   getUserPlaylist(

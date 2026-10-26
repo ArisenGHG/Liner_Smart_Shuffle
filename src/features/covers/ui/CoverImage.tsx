@@ -1,6 +1,6 @@
 import AppImage, { type ImageProps } from "./AppImage";
 import { useEffect, useState, useRef } from "react";
-import { markCoverReady, useCoverSrc } from "../lib/coverArt";
+import { markCoverReady, useRenderedCoverSrc } from "../lib/coverArt";
 import { prepareCoverFallback } from "../lib/coverSigner";
 
 type CoverImageProps = Omit<ImageProps, "src" | "onError"> & {
@@ -14,7 +14,7 @@ export default function CoverImage({
   crossOrigin = "anonymous",
   ...rest
 }: CoverImageProps) {
-  const centralSrc = useCoverSrc(src);
+  const centralSrc = useRenderedCoverSrc(src);
   const [localFallback, setLocalFallback] = useState<string | undefined>(
     undefined,
   );
@@ -75,7 +75,7 @@ export default function CoverImage({
       src={effectiveSrc}
       crossOrigin={corsMode}
       onLoad={(event) => {
-        markCoverReady(src, effectiveSrc, event.currentTarget);
+        markCoverReady(src, effectiveSrc);
         onLoad?.(event);
       }}
       onError={handleError}
