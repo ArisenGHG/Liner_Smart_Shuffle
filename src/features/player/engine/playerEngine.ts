@@ -35,6 +35,7 @@ import { showToast } from "@/shared/ui";
 import { createTranslatorSync, getStoredLocale } from "@/languages";
 import type { Track } from "@/shared/types";
 import { isLocalTrackId } from "@/shared/media/local";
+import { loadAmbientScript } from "@/shared/media/ambient";
 import { STREAMS_REFUSED_MESSAGE } from "@/shared/youtube";
 
 const MAX_CONSECUTIVE_AUTO_SKIPS = 3;
@@ -1333,6 +1334,7 @@ class PlayerEngine {
     if (!lyricsCache.has(nextTrack.id)) {
       void this.prefetchLyrics(nextTrack.id, lyricsHint(nextTrack));
     }
+    void loadAmbientScript(nextTrack.id);
 
     void linerDb.putTrack(nextTrack);
 

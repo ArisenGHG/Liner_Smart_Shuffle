@@ -2,6 +2,8 @@ import { useCallback, useEffect, createElement, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { shouldReleaseTopPin, startsPinnedToTop } from "./lyricsTopPin";
 import { usePlayerState } from "../hooks/usePlayerState";
+import { useScrollEdges } from "../hooks/useScrollEdges";
+import { cn } from "@/shared/lib";
 import { playerEngine } from "../engine/playerEngine";
 import {
   useLyricsStore,
@@ -21,6 +23,7 @@ import "@braccato/core/styles/variables.css";
 import "@braccato/core/styles/lyrics.css";
 import "@braccato/core/styles/instrumental.css";
 import KawarpWrapper from "./KawarpWrapper";
+import AmbientLayer from "./AmbientLayer";
 import { useTranslation } from "@/languages";
 
 const BRACCATO_TAG = "braccato-lyrics";
@@ -331,12 +334,16 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
     return () => cancelAnimationFrame(rafId);
   }, []);
 
+  const { atTop, atBottom } = useScrollEdges(elementRef, lyrics);
+
   return (
     <div className="relative flex flex-col flex-1 w-full h-full min-h-0">
       {createElement(BRACCATO_TAG, {
         ref: setElement,
         source: "#liner-audio",
-        className: "block flex-1 w-full h-full px-6",
+        className: "lyrics-edge-fog block flex-1 w-full h-full px-6",
+        "data-at-top": atTop ? "" : undefined,
+        "data-at-bottom": atBottom ? "" : undefined,
         style: {
           overflowY: "auto",
           overflowX: "hidden",
@@ -344,6 +351,20 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
           scrollbarWidth: "none",
         },
       })}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-x-0 top-0 h-[18%] backdrop-blur-md transition-opacity duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] [mask-image:linear-gradient(to_bottom,black,transparent)]",
+          atTop ? "opacity-0" : "opacity-100",
+        )}
+      />
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-x-0 bottom-0 h-[26%] backdrop-blur-md transition-opacity duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] [mask-image:linear-gradient(to_top,black,transparent)]",
+          atBottom ? "opacity-0" : "opacity-100",
+        )}
+      />
     </div>
   );
 }
@@ -433,6 +454,7 @@ export function FullscreenPlayer({
             onError={onError}
           />
         ) : null}
+        <AmbientLayer trackId={currentTrackId} />
       </div>
 
       <div className="absolute inset-0 z-[1] bg-black/40" />
