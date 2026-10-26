@@ -24,6 +24,7 @@ import {
   type PlaybackStream,
 } from "./playbackStream";
 import { findYoutubeStandIn } from "./youtubeStandIn";
+import { findExactSongVersion } from "./exactSongVersion";
 
 export interface ResolveStreamOptions {
   progressive?: boolean;
@@ -110,10 +111,20 @@ async function resolveSoundCloud(
 
 async function resolveYoutubeTrack(
   track: PlayableTrack,
-  videoId: string,
+  rowVideoId: string,
   progressive: boolean,
   signal?: AbortSignal,
 ): Promise<PlaybackStream> {
+  const songId = track.audioVariant
+    ? await findExactSongVersion(track, rowVideoId, signal)
+    : null;
+  if (songId)
+    log(
+      "cyan",
+      "playback",
+      `album row ${rowVideoId} is a ${track.audioVariant}, playing the song ${songId}`,
+    );
+  const videoId = songId ?? rowVideoId;
   const liner = await resolveLinerStream(videoId, signal);
   if (liner) {
     log("cyan", "playback", `playing liner audio (r2) for "${track.title}"`);

@@ -10,6 +10,8 @@ export interface TrackAlbum {
   title: string;
 }
 
+export type TrackAudioVariant = 'music-video' | 'premium-only';
+
 export interface Track {
   id: string;
   title: string;
@@ -18,6 +20,7 @@ export interface Track {
   durationMs: number;
   cover?: Cover;
   explicit?: boolean;
+  audioVariant?: TrackAudioVariant;
 }
 
 export interface ApiTrack extends Track {
