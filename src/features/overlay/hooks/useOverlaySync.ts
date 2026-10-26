@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { usePlayerState } from "@/features/player/hooks/usePlayerState";
 import { playerEngine } from "@/features/player/engine/playerEngine";
+import { usePlayerStore } from "@/features/player/store/playerStore";
 import {
   useIsTrackLiked,
   useLikeTrack,
@@ -10,15 +11,13 @@ import { useCoverSrc } from "@/features/covers";
 import { getAuthSession } from "@/shared/api";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { showToast } from "@/shared/ui/Toast";
-import type {
-  OverlayAction,
-  OverlayStatePayload,
-} from "../contracts";
+import type { OverlayAction, OverlayStatePayload } from "../contracts";
 import { useOverlaySettingsStore } from "../store/overlaySettingsStore";
 
 export function useOverlaySync() {
   const authStatus = useAuthStore((s) => s.status);
-  const isAuthenticated = authStatus === "authenticated" || Boolean(getAuthSession());
+  const isAuthenticated =
+    authStatus === "authenticated" || Boolean(getAuthSession());
   const player = usePlayerState();
   const currentTrack = player.currentTrack;
   const effectiveCover = useCoverSrc(currentTrack?.coverUrl);
@@ -68,85 +67,88 @@ export function useOverlaySync() {
   useEffect(() => {
     if (!window.linerElectron?.onOverlayAction) return;
 
-    const cleanup = window.linerElectron.onOverlayAction((action: OverlayAction) => {
-      switch (action.type) {
-        case "togglePlay":
-          void playerEngine.togglePlayPause();
-          break;
-        case "play":
-          void playerEngine.resume();
-          break;
-        case "pause":
-          playerEngine.pause();
-          break;
-        case "next":
-          void playerEngine.skipNext();
-          break;
-        case "prev":
-          void playerEngine.skipPrevious();
-          break;
-        case "seek":
-          if (typeof action.payload?.positionMs === "number") {
-            playerEngine.seek(action.payload.positionMs);
-          }
-          break;
-        case "like":
-          if (currentTrack && !isTogglingLikeRef.current) {
-            isTogglingLikeRef.current = true;
-            const fromGlobal = Boolean(
-              (action.payload as any)?.fromGlobalShortcut || (action as any).fromGlobalShortcut
-            );
-            const onSettled = () => {
-              isTogglingLikeRef.current = false;
-            };
-            if (isLiked) {
-              unlikeMutation.mutate(currentTrack.id, {
-                onSuccess: () => {
-                  if (fromGlobal) {
-                    showToast(currentTrack.title || "Song", "info", {
-                      description: "Removed from favorites",
-                    });
-                  }
-                },
-                onSettled,
-              });
-            } else {
-              likeMutation.mutate(currentTrack.id, {
-                onSuccess: () => {
-                  if (fromGlobal) {
-                    showToast(currentTrack.title || "Song", "checkmark", {
-                      description: "Added to favorites",
-                    });
-                  }
-                },
-                onSettled,
-              });
+    const cleanup = window.linerElectron.onOverlayAction(
+      (action: OverlayAction) => {
+        switch (action.type) {
+          case "togglePlay":
+            void playerEngine.togglePlayPause();
+            break;
+          case "play":
+            void playerEngine.resume();
+            break;
+          case "pause":
+            playerEngine.pause();
+            break;
+          case "next":
+            void playerEngine.skipNext();
+            break;
+          case "prev":
+            void playerEngine.skipPrevious();
+            break;
+          case "seek":
+            if (typeof action.payload?.positionMs === "number") {
+              playerEngine.seek(action.payload.positionMs);
             }
-          }
-          break;
-        case "volumeUp": {
-          const current = player.volume;
-          const next = Math.min(1, Math.round((current + 0.05) * 100) / 100);
-          playerEngine.setVolume(next);
-          break;
-        }
-        case "volumeDown": {
-          const current = player.volume;
-          const next = Math.max(0, Math.round((current - 0.05) * 100) / 100);
-          playerEngine.setVolume(next);
-          break;
-        }
-        case "setVolume": {
-          if (typeof action.payload?.volume === "number") {
-            const next = Math.min(1, Math.max(0, action.payload.volume));
+            break;
+          case "like":
+            if (currentTrack && !isTogglingLikeRef.current) {
+              isTogglingLikeRef.current = true;
+              const fromGlobal = Boolean(
+                (action.payload as any)?.fromGlobalShortcut ||
+                (action as any).fromGlobalShortcut,
+              );
+              const onSettled = () => {
+                isTogglingLikeRef.current = false;
+              };
+              if (isLiked) {
+                unlikeMutation.mutate(currentTrack.id, {
+                  onSuccess: () => {
+                    if (fromGlobal) {
+                      showToast(currentTrack.title || "Song", "info", {
+                        description: "Removed from favorites",
+                      });
+                    }
+                  },
+                  onSettled,
+                });
+              } else {
+                likeMutation.mutate(currentTrack.id, {
+                  onSuccess: () => {
+                    if (fromGlobal) {
+                      showToast(currentTrack.title || "Song", "checkmark", {
+                        description: "Added to favorites",
+                      });
+                    }
+                  },
+                  onSettled,
+                });
+              }
+            }
+            break;
+          case "volumeUp": {
+            const current = usePlayerStore.getState().volume;
+            const next = Math.min(1, Math.round((current + 0.05) * 100) / 100);
             playerEngine.setVolume(next);
+            break;
           }
-          break;
+          case "volumeDown": {
+            const current = usePlayerStore.getState().volume;
+            const next = Math.max(0, Math.round((current - 0.05) * 100) / 100);
+            playerEngine.setVolume(next);
+            break;
+          }
+          case "setVolume": {
+            if (typeof action.payload?.volume === "number") {
+              const next = Math.min(1, Math.max(0, action.payload.volume));
+              playerEngine.setVolume(next);
+            }
+            break;
+          }
+          case "focusMainWindow":
+            break;
         }
-        case "focusMainWindow":
-          break;
-      }
-    });
+      },
+    );
 
     return cleanup;
   }, [currentTrack, isLiked, likeMutation, unlikeMutation]);
@@ -157,9 +159,15 @@ export function useOverlaySync() {
     if (!isAuthenticated) return;
 
     const artistName =
-      (currentTrack?.artists && typeof currentTrack.artists === "string" ? currentTrack.artists : "") ||
-      ((currentTrack as any)?.artist && typeof (currentTrack as any).artist === "string" ? (currentTrack as any).artist : "") ||
-      (Array.isArray(currentTrack?.artistList) && currentTrack.artistList.length > 0
+      (currentTrack?.artists && typeof currentTrack.artists === "string"
+        ? currentTrack.artists
+        : "") ||
+      ((currentTrack as any)?.artist &&
+      typeof (currentTrack as any).artist === "string"
+        ? (currentTrack as any).artist
+        : "") ||
+      (Array.isArray(currentTrack?.artistList) &&
+      currentTrack.artistList.length > 0
         ? currentTrack.artistList
             .map((a: any) => (typeof a === "string" ? a : a?.name))
             .filter(Boolean)

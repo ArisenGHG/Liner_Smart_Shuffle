@@ -43,97 +43,116 @@ export function useTouchBarSync() {
   useEffect(() => {
     if (!window.linerElectron?.onTouchBarAction) return;
 
-    const cleanup = window.linerElectron.onTouchBarAction((action: TouchBarAction) => {
-      switch (action.type) {
-        case "togglePlay":
-          void playerEngine.togglePlayPause();
-          break;
-        case "play":
-          void playerEngine.resume();
-          break;
-        case "pause":
-          playerEngine.pause();
-          break;
-        case "next":
-          void playerEngine.skipNext(true);
-          break;
-        case "prev":
-          void playerEngine.skipPrevious();
-          break;
-        case "seek":
-          if (typeof action.payload?.positionMs === "number") {
-            const targetMs = action.payload.positionMs;
-            playerEngine.seek(targetMs);
-            const lines = useLyricsStore.getState().syncedLines;
-            if (lines && lines.length > 0) {
-              let idx = -1;
-              for (let i = 0; i < lines.length; i++) {
-                const prevEnd =
-                  i > 0 && lines[i - 1].words && lines[i - 1].words!.length > 0
-                    ? lines[i - 1].words![lines[i - 1].words!.length - 1].endMs
-                    : i > 0
-                      ? lines[i - 1].timeMs
-                      : 0;
-                const targetEarlyMs = Math.max(prevEnd, lines[i].timeMs - 600);
-                if (targetEarlyMs <= targetMs) {
-                  idx = i;
-                } else {
-                  break;
+    const cleanup = window.linerElectron.onTouchBarAction(
+      (action: TouchBarAction) => {
+        switch (action.type) {
+          case "togglePlay":
+            void playerEngine.togglePlayPause();
+            break;
+          case "play":
+            void playerEngine.resume();
+            break;
+          case "pause":
+            playerEngine.pause();
+            break;
+          case "next":
+            void playerEngine.skipNext(true);
+            break;
+          case "prev":
+            void playerEngine.skipPrevious();
+            break;
+          case "seek":
+            if (typeof action.payload?.positionMs === "number") {
+              const targetMs = action.payload.positionMs;
+              playerEngine.seek(targetMs);
+              const lines = useLyricsStore.getState().syncedLines;
+              if (lines && lines.length > 0) {
+                let idx = -1;
+                for (let i = 0; i < lines.length; i++) {
+                  const prevEnd =
+                    i > 0 &&
+                    lines[i - 1].words &&
+                    lines[i - 1].words!.length > 0
+                      ? lines[i - 1].words![lines[i - 1].words!.length - 1]
+                          .endMs
+                      : i > 0
+                        ? lines[i - 1].timeMs
+                        : 0;
+                  const targetEarlyMs = Math.max(
+                    prevEnd,
+                    lines[i].timeMs - 600,
+                  );
+                  if (targetEarlyMs <= targetMs) {
+                    idx = i;
+                  } else {
+                    break;
+                  }
                 }
+                useLyricsStore
+                  .getState()
+                  .setActiveLineIndex(idx >= 0 ? idx : null);
               }
-              useLyricsStore.getState().setActiveLineIndex(idx >= 0 ? idx : null);
             }
-          }
-          break;
-        case "volume":
-          if (typeof action.payload?.volume === "number") {
-            playerEngine.setVolume(action.payload.volume);
-          }
-          break;
-        case "toggleShuffle":
-          playerEngine.setShuffle(!playerEngine.getSnapshot().shuffle);
-          break;
-        case "toggleFullscreen": {
-          const currentFs = usePlayerStore.getState().fullscreen || location.pathname === "/player";
-          if (currentFs) {
-            if (location.pathname === "/player") {
-              navigate(-1);
+            break;
+          case "volume":
+            if (typeof action.payload?.volume === "number") {
+              playerEngine.setVolume(action.payload.volume);
+            }
+            break;
+          case "toggleShuffle":
+            playerEngine.setShuffle(!playerEngine.getSnapshot().shuffle);
+            break;
+          case "toggleFullscreen": {
+            const currentFs =
+              usePlayerStore.getState().fullscreen ||
+              location.pathname === "/player";
+            if (currentFs) {
+              if (location.pathname === "/player") {
+                navigate(-1);
+              } else {
+                usePlayerStore.getState().setFullscreen(false);
+              }
             } else {
-              usePlayerStore.getState().setFullscreen(false);
+              usePlayerStore.getState().setFullscreen(true);
             }
-          } else {
-            usePlayerStore.getState().setFullscreen(true);
+            break;
           }
-          break;
+          case "adjustOffset":
+            if (typeof action.payload?.deltaMs === "number") {
+              useLyricsStore.getState().adjustOffset(action.payload.deltaMs);
+            }
+            break;
+          case "like":
+            if (currentTrack && !isTogglingLikeRef.current) {
+              isTogglingLikeRef.current = true;
+              const onSettled = () => {
+                isTogglingLikeRef.current = false;
+              };
+              if (isLiked) {
+                unlikeMutation.mutate(currentTrack.id, { onSettled });
+              } else {
+                likeMutation.mutate(currentTrack.id, { onSettled });
+              }
+            }
+            break;
+          case "navigate":
+            if (action.payload?.route) {
+              navigate(action.payload.route);
+            }
+            break;
         }
-        case "adjustOffset":
-          if (typeof action.payload?.deltaMs === "number") {
-            useLyricsStore.getState().adjustOffset(action.payload.deltaMs);
-          }
-          break;
-        case "like":
-          if (currentTrack && !isTogglingLikeRef.current) {
-            isTogglingLikeRef.current = true;
-            const onSettled = () => {
-              isTogglingLikeRef.current = false;
-            };
-            if (isLiked) {
-              unlikeMutation.mutate(currentTrack.id, { onSettled });
-            } else {
-              likeMutation.mutate(currentTrack.id, { onSettled });
-            }
-          }
-          break;
-        case "navigate":
-          if (action.payload?.route) {
-            navigate(action.payload.route);
-          }
-          break;
-      }
-    });
+      },
+    );
 
     return cleanup;
-  }, [currentTrack, isLiked, likeMutation, unlikeMutation, navigate, location.pathname]);
+  }, [
+    currentTrack,
+    isLiked,
+    likeMutation,
+    unlikeMutation,
+    navigate,
+    location.pathname,
+  ]);
 
   useEffect(() => {
     let rafId: number;
@@ -205,8 +224,11 @@ export function useTouchBarSync() {
       } else {
         for (let i = 0; i < syncedLines.length; i++) {
           const prevEnd =
-            i > 0 && syncedLines[i - 1].words && syncedLines[i - 1].words!.length > 0
-              ? syncedLines[i - 1].words![syncedLines[i - 1].words!.length - 1].endMs
+            i > 0 &&
+            syncedLines[i - 1].words &&
+            syncedLines[i - 1].words!.length > 0
+              ? syncedLines[i - 1].words![syncedLines[i - 1].words!.length - 1]
+                  .endMs
               : i > 0
                 ? syncedLines[i - 1].timeMs
                 : 0;
@@ -222,7 +244,9 @@ export function useTouchBarSync() {
       if (activeIndex >= 0) {
         const line = syncedLines[activeIndex];
         const nextLine = syncedLines[activeIndex + 1];
-        const upcomingLine = syncedLines.slice(activeIndex + 1).find((l) => Boolean(l.text && l.text.trim()));
+        const upcomingLine = syncedLines
+          .slice(activeIndex + 1)
+          .find((l) => Boolean(l.text && l.text.trim()));
         nextLyricText = upcomingLine?.text || "";
 
         const lineDurationMs = nextLine
@@ -286,8 +310,9 @@ export function useTouchBarSync() {
 
         const isInstrumental = Boolean(
           line.isInstrumental ||
-          (line.text.trim() === "" && (!line.words || line.words.length === 0)) ||
-          line.text.trim() === "♪"
+          (line.text.trim() === "" &&
+            (!line.words || line.words.length === 0)) ||
+          line.text.trim() === "♪",
         );
 
         activeLine = {
@@ -299,7 +324,11 @@ export function useTouchBarSync() {
         };
       } else {
         const firstLine = syncedLines[0];
-        if (firstLine && firstLine.timeMs > 3000 && currentAudioMs < firstLine.timeMs - 600) {
+        if (
+          firstLine &&
+          firstLine.timeMs > 3000 &&
+          currentAudioMs < firstLine.timeMs - 600
+        ) {
           activeLine = {
             text: "",
             timeMs: 0,
@@ -314,13 +343,14 @@ export function useTouchBarSync() {
       }
     }
 
-    const hasSyncedLyrics =
-      syncedLines.length > 0 &&
-      syncedLines.some(
-        (l) => (l.timeMs ?? 0) > 0 || Boolean((l.durationMs ?? 0) > 0 && l.isInstrumental),
-      );
+    const hasSyncedLyrics = syncedLines.some(
+      (l) =>
+        (l.timeMs ?? 0) > 0 ||
+        Boolean((l.durationMs ?? 0) > 0 && l.isInstrumental),
+    );
 
-    const isFullscreen = location.pathname === "/player" || Boolean(player.fullscreen);
+    const isFullscreen =
+      location.pathname === "/player" || Boolean(player.fullscreen);
 
     const mappedSyncedLines: TouchBarActiveLine[] = syncedLines.map((l) => ({
       text: l.text,
@@ -329,7 +359,7 @@ export function useTouchBarSync() {
       isInstrumental: Boolean(
         l.isInstrumental ||
         (l.text.trim() === "" && (!l.words || l.words.length === 0)) ||
-        l.text.trim() === "♪"
+        l.text.trim() === "♪",
       ),
       words: l.words?.map((w) => ({
         text: w.text,
@@ -357,7 +387,7 @@ export function useTouchBarSync() {
       shuffle: player.shuffle,
       repeat: player.repeat,
       activeLine: hasSyncedLyrics ? activeLine : null,
-      activeLyricText: hasSyncedLyrics ? (activeLine?.text || "") : "",
+      activeLyricText: hasSyncedLyrics ? activeLine?.text || "" : "",
       nextLyricText: hasSyncedLyrics ? nextLyricText : "",
       offsetMs,
       currentRoute: location.pathname,

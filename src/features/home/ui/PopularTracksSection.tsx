@@ -7,7 +7,7 @@ import { usePlayerStore } from "@/features/player/store/playerStore";
 import { useToast } from "@/shared/ui";
 import DropdownMenu from "@/shared/ui/DropdownMenu";
 import type { PopularItem } from "../hooks/usePopularTracks";
-import type { Track } from "@/shared/types";
+
 import ArtistLink from "@/features/artist/ui/ArtistLink";
 import CoverImage from "@/features/covers/ui/CoverImage";
 import ExplicitBadge from "@/shared/ui/ExplicitBadge";

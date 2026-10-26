@@ -15,8 +15,6 @@ import {
   FolderCheckFill,
   ShareForwardLine,
   PlaylistFill,
-  PlaylistLine,
-  DiscLine,
   MusicLine,
   CheckLine,
   More1Fill,
@@ -65,7 +63,10 @@ function CollectionContent() {
 
   const { data, loading } = useCollection(type, id);
   const classicSurfaces = useClassicSurfaces();
-  usePageBackdrop(data?.coverUrl, type === "playlist" ? { dim: 0.05 } : undefined);
+  usePageBackdrop(
+    data?.coverUrl,
+    type === "playlist" ? { dim: 0.05 } : undefined,
+  );
   const isSingleArtistAlbum = useMemo(() => {
     if (type === "playlist" || !data || data.tracks.length === 0) return false;
     const first = data.tracks[0].artists;
@@ -282,7 +283,10 @@ function CollectionContent() {
               className="relative z-10 flex flex-col h-full w-full min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain box-border pt-(--page-inset-top) pb-(--page-inset-bottom)"
               style={{ willChange: "scroll-position" }}
             >
-              <div className="shrink-0 pl-[16px] pr-[12px] pt-[8px]" data-no-window-drag>
+              <div
+                className="shrink-0 pl-[16px] pr-[12px] pt-[8px]"
+                data-no-window-drag
+              >
                 <EntityHero
                   cover={
                     data.coverUrl ? (
@@ -348,16 +352,12 @@ function CollectionContent() {
                   meta={
                     <div className="flex items-center flex-wrap gap-[6px]">
                       {data.year && (
-                        <div
-                          className={HERO_CHIP_CLASS}
-                        >
+                        <div className={HERO_CHIP_CLASS}>
                           <span>{data.year}</span>
                         </div>
                       )}
 
-                      <div
-                        className={HERO_CHIP_CLASS}
-                      >
+                      <div className={HERO_CHIP_CLASS}>
                         <MusicLine
                           size={13}
                           className="text-text-secondary shrink-0"

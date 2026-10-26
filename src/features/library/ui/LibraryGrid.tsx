@@ -13,15 +13,7 @@ import type {
 import { useTranslation } from "@/languages";
 import { useModalStore } from "../store/modalStore";
 import { LuTrash2 } from "react-icons/lu";
-import {
-  More2Fill,
-  PlaylistFill,
-  DiscLine,
-  User1Line,
-  Search2Line,
-  AddLine,
-  Search3Fill,
-} from "@mingcute/react";
+import { More2Fill, PlaylistFill, AddLine, Search3Fill } from "@mingcute/react";
 
 interface LibraryGridProps {
   items: LibraryItemViewModel[];
@@ -83,12 +75,26 @@ function useItemMenuItems(item: LibraryItemViewModel): DropdownMenuItem[] {
             coverUrl: item.imageUrl,
             type: entityType,
             subtitle: item.subtitle,
-            isOwned: item.isOwned ?? (item.kind === "playlist" ? item.href.startsWith("/library/playlist") : false),
+            isOwned:
+              item.isOwned ??
+              (item.kind === "playlist"
+                ? item.href.startsWith("/library/playlist")
+                : false),
           });
         },
       },
     ];
-  }, [item.id, item.title, item.imageUrl, item.subtitle, item.kind, item.isOwned, item.source, item.href, t]);
+  }, [
+    item.id,
+    item.title,
+    item.imageUrl,
+    item.subtitle,
+    item.kind,
+    item.isOwned,
+    item.source,
+    item.href,
+    t,
+  ]);
 }
 
 function LibraryItemCard({ item }: { item: LibraryItemViewModel }) {
@@ -388,9 +394,7 @@ export default function LibraryGrid({
             ))
           : null}
 
-        {hasMore ? (
-          <div ref={sentinelRef} className="h-[2px] w-full" />
-        ) : null}
+        {hasMore ? <div ref={sentinelRef} className="h-[2px] w-full" /> : null}
       </div>
     );
   }
@@ -417,9 +421,7 @@ export default function LibraryGrid({
       {loadingMore
         ? Array.from({ length: 6 }, (_, index) => (
             <div key={`loader-${index}`} className="w-full">
-              <LoadingSkeletonGrid
-                circle={items[index]?.kind === "artist"}
-              />
+              <LoadingSkeletonGrid circle={items[index]?.kind === "artist"} />
             </div>
           ))
         : null}
@@ -428,4 +430,3 @@ export default function LibraryGrid({
     </div>
   );
 }
-

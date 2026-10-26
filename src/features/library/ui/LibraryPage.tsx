@@ -49,8 +49,7 @@ const initialState: LibraryState = {
 function sortByRecent(items: LibraryItemViewModel[]) {
   const sorted = [...items];
   sorted.sort(
-    (a, b) =>
-      new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
+    (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
   );
   return sorted;
 }
@@ -152,7 +151,6 @@ export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<LibraryTab>("all");
   const [stateByTab, setStateByTab] = useState<LibraryState>(initialState);
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [showTopFog, setShowTopFog] = useState(false);
   const [viewMode, setViewMode] = useState<LibraryViewMode>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("liner_library_view_mode");
@@ -181,10 +179,14 @@ export default function LibraryPage() {
     isLoading: playlistsLoading,
   } = usePlaylistsList();
 
-  const { data: albumItems = [], isLoading: albumsLoading } = useExternalItems("album");
-  const { data: artistItems = [], isLoading: artistsLoading } = useExternalItems("artist");
-  const { data: externalPlaylistItems = [], isLoading: externalPlaylistsLoading } =
-    useExternalItems("playlist");
+  const { data: albumItems = [], isLoading: albumsLoading } =
+    useExternalItems("album");
+  const { data: artistItems = [], isLoading: artistsLoading } =
+    useExternalItems("artist");
+  const {
+    data: externalPlaylistItems = [],
+    isLoading: externalPlaylistsLoading,
+  } = useExternalItems("playlist");
   const youtubeItems = useYoutubeLibraryItems();
   const youtubePlaylistItems = useMemo(
     () => youtubeItems.filter((item) => item.kind === "playlist"),
@@ -216,7 +218,10 @@ export default function LibraryPage() {
   }, [playlistsData, t]);
 
   const initialLoading =
-    playlistsLoading || albumsLoading || artistsLoading || externalPlaylistsLoading;
+    playlistsLoading ||
+    albumsLoading ||
+    artistsLoading ||
+    externalPlaylistsLoading;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -255,8 +260,7 @@ export default function LibraryPage() {
       debouncedQuery.length === 0
         ? source
         : source.filter((item) => {
-            const haystack =
-              `${item.title} ${item.subtitle}`.toLowerCase();
+            const haystack = `${item.title} ${item.subtitle}`.toLowerCase();
             return haystack.includes(debouncedQuery);
           });
 
@@ -380,14 +384,9 @@ export default function LibraryPage() {
     <div className="relative h-full w-full overflow-hidden">
       <div
         ref={scrollContainerRef}
-        onScroll={(event) => {
-          const next = event.currentTarget.scrollTop > 2;
-          setShowTopFog((prev) => (prev === next ? prev : next));
-        }}
         className="h-full w-full overflow-y-auto bg-transparent pb-(--page-inset-bottom)"
       >
         <div className="relative z-20 bg-transparent">
-
           <div className="px-[12px] pt-[36px] pb-[10px]">
             <h1
               className="text-[26px] font-bold text-text-primary tracking-tight m-0 leading-tight"
@@ -411,11 +410,12 @@ export default function LibraryPage() {
               }
               viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
-              onCreatePlaylist={showsPlaylists ? () => openCreatePlaylist() : undefined}
+              onCreatePlaylist={
+                showsPlaylists ? () => openCreatePlaylist() : undefined
+              }
             />
           </div>
         </div>
-
 
         <div className="px-[12px] pt-[4px] pb-[20px]">
           {activeTab === "playlists" && playlistsError ? (
@@ -478,7 +478,6 @@ export default function LibraryPage() {
           )}
         </div>
       </div>
-
     </div>
   );
 }

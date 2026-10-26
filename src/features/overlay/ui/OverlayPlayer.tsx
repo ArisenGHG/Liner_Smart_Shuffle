@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useTranslation } from "@/languages";
 import { motion } from "framer-motion";
 import { SkipNext, SkipPrevious } from "@solar-icons/react";
 import {
@@ -21,7 +20,6 @@ const OVERLAY_CARD_TRANSITION = {
 
 export function OverlayPlayer() {
   useDisableButtonFocus();
-  const { t } = useTranslation();
 
   const [state, setState] = useState<OverlayStatePayload>({
     status: "idle",
@@ -88,6 +86,11 @@ export function OverlayPlayer() {
     state.durationMs || state.track?.durationMs || 1,
   );
 
+  const interpolatedPosRef = useRef(interpolatedPosMs);
+  useEffect(() => {
+    interpolatedPosRef.current = interpolatedPosMs;
+  }, [interpolatedPosMs]);
+
   useEffect(() => {
     if (state.track?.id !== lastTrackIdRef.current) {
       lastTrackIdRef.current = state.track?.id ?? null;
@@ -98,14 +101,15 @@ export function OverlayPlayer() {
     }
 
     if (state.status === "paused") {
-      const pos = state.positionMs > 0 ? state.positionMs : interpolatedPosMs;
+      const pos =
+        state.positionMs > 0 ? state.positionMs : interpolatedPosRef.current;
       setInterpolatedPosMs(pos);
       anchorPosRef.current = pos;
       anchorTimeRef.current = performance.now();
       return;
     }
 
-    if (state.positionMs > 0 || interpolatedPosMs === 0) {
+    if (state.positionMs > 0 || interpolatedPosRef.current === 0) {
       setInterpolatedPosMs(state.positionMs);
       anchorPosRef.current = state.positionMs;
       anchorTimeRef.current = performance.now();
@@ -140,7 +144,6 @@ export function OverlayPlayer() {
 
   const currentPosMs = interpolatedPosMs;
   const progressRatio = Math.min(1, Math.max(0, currentPosMs / durationMs));
-
 
   // Keyboard Shortcuts (Miniplayer mode)
   useEffect(() => {
@@ -241,7 +244,6 @@ export function OverlayPlayer() {
           transformOrigin: "center center",
         }}
       >
-
         {/* Background Progress Fill - Straight rectangular without rounding */}
         <div
           className="pointer-events-none absolute inset-y-0 left-0 z-[1] rounded-none"

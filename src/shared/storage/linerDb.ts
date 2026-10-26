@@ -85,7 +85,7 @@ class LinerDb {
   private memLyrics = new Map<string, CachedLyricsRecord>();
   private memArtists = new Map<string, CachedArtistRecord>();
 
-  private handleDbError(err: unknown) {
+  private handleDbError() {
     this.dbPromise = null;
   }
 
@@ -209,8 +209,8 @@ class LinerDb {
             reject(err);
           }
         });
-      } catch (err) {
-        this.handleDbError(err);
+      } catch {
+        this.handleDbError();
         if (attempt === 0) {
           // retry once on fresh connection
           continue;

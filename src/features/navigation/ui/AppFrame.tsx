@@ -231,11 +231,11 @@ export default function AppFrame({ children }: AppFrameProps) {
 
   const openFullscreenPlayer = useCallback(() => {
     setFullscreenPlayerOpen(true);
-  }, []);
+  }, [setFullscreenPlayerOpen]);
 
   const closeFullscreenPlayer = useCallback(() => {
     setFullscreenPlayerOpen(false);
-  }, []);
+  }, [setFullscreenPlayerOpen]);
 
   const handleCloseFullscreen = useCallback(() => {
     if (fullscreenPlayerOpen) {
@@ -243,7 +243,12 @@ export default function AppFrame({ children }: AppFrameProps) {
     } else if (isFullscreenRoute) {
       navigate("/", { replace: true });
     }
-  }, [fullscreenPlayerOpen, isFullscreenRoute, navigate]);
+  }, [
+    fullscreenPlayerOpen,
+    isFullscreenRoute,
+    navigate,
+    setFullscreenPlayerOpen,
+  ]);
 
   useEffect(() => {
     if (isFullscreenPlayer && !hasCurrentTrack) {
@@ -552,7 +557,7 @@ export default function AppFrame({ children }: AppFrameProps) {
     return () => {
       document.removeEventListener("mousedown", onGlobalPointerDown, true);
     };
-  }, [searchOpen, queuePopupOpen, handleQueuePopupToggle]);
+  }, [searchOpen, queuePopupOpen, handleQueuePopupToggle, closeSearch]);
 
   const handleSearchToggle = useCallback(() => {
     toggleSearch();
@@ -681,16 +686,16 @@ export default function AppFrame({ children }: AppFrameProps) {
       ref={appFrameRef}
       className={`relative flex flex-col h-full w-full overflow-hidden p-1.5 gap-1.5 ${
         isFullscreenPlayer ? "bg-black" : "bg-bg-canvas"
-      } ${
-        isEdgeToEdge ? "rounded-none" : "rounded-[12px]"
-      }`}
+      } ${isEdgeToEdge ? "rounded-none" : "rounded-[12px]"}`}
       onScroll={(e) => {
         if (e.currentTarget.scrollLeft !== 0) e.currentTarget.scrollLeft = 0;
         if (e.currentTarget.scrollTop !== 0) e.currentTarget.scrollTop = 0;
       }}
     >
       {classicSurfaces ? (
-        isDark ? <AmbientTopGlow /> : null
+        isDark ? (
+          <AmbientTopGlow />
+        ) : null
       ) : (
         <DynamicBlurBackground isDark={isDark} />
       )}
@@ -773,9 +778,7 @@ export default function AppFrame({ children }: AppFrameProps) {
                     className="pointer-events-auto absolute top-(--page-inset-top) bottom-(--floating-inset-bottom) right-0 z-[50]"
                     style={{ width: RIGHT_DRAWER_WIDTH }}
                   >
-                    <RightDrawer
-                      onClose={closeRightPanel}
-                    />
+                    <RightDrawer onClose={closeRightPanel} />
                   </motion.aside>
                 )}
               </AnimatePresence>
