@@ -502,8 +502,10 @@
     "eq_preset_rnb_hint": "Voix soyeuses sur des basses rondes et chaleureuses",
     "beta_visuals": {
       "label": "Attention",
-      "title": "Visuels en bêta",
-      "body": "Les effets sont redessinés à chaque image et peuvent vider la batterie ou saccader sur les appareils modestes.",
+      "ambient_title": "Ambient est en bêta",
+      "ambient_body": "Ce titre a son propre fond animé. Il est encore en bêta et peut solliciter les appareils modestes : choisis un mode plus léger si le lecteur saccade.",
+      "settings_title": "Qualité visuelle",
+      "settings_body": "Choisis à quel point le lecteur plein écran s’anime. Les modes légers économisent la batterie et sont plus fluides sur les appareils modestes.",
       "modes": {
         "full": {
           "name": "Tous les effets",

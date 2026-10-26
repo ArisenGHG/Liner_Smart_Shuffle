@@ -410,8 +410,10 @@
     "reverb_amount": "Hall",
     "beta_visuals": {
       "label": "Warnung",
-      "title": "Visuals in der Beta",
-      "body": "Effekte werden in jedem Frame neu gezeichnet und können auf schwächeren Geräten den Akku leeren oder ruckeln.",
+      "ambient_title": "Ambient ist in der Beta",
+      "ambient_body": "Dieser Track hat einen eigenen animierten Hintergrund. Er ist noch in der Beta und kann schwächere Geräte belasten. Wähle einen leichteren Modus, wenn der Player ruckelt.",
+      "settings_title": "Visuelle Qualität",
+      "settings_body": "Lege fest, wie lebendig der Vollbild-Player ist. Leichtere Modi schonen den Akku und laufen auf schwächeren Geräten flüssiger.",
       "modes": {
         "full": {
           "name": "Alle Effekte",

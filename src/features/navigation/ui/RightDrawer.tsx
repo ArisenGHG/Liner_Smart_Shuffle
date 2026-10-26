@@ -19,7 +19,17 @@ import { useListReorder } from "@/shared/hooks";
 import RightDrawerHeader from "./RightDrawerHeader";
 
 const QUEUE_ITEM_HEIGHT = 68;
-const REMOVE_MS = 220;
+const REMOVE_FADE_MS = 180;
+const REMOVE_SHIFT_DELAY_MS = 90;
+const REMOVE_SHIFT_MS = 260;
+const REMOVE_MS = REMOVE_SHIFT_DELAY_MS + REMOVE_SHIFT_MS;
+const CALM_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+const RESTORE_FADE_DELAY_MS = REMOVE_SHIFT_MS - REMOVE_SHIFT_DELAY_MS;
+
+interface QueueRestore {
+  index: number;
+  phase: "start" | "run";
+}
 
 function getQueueScrollTarget(container: HTMLDivElement, currentIndex: number) {
   return Math.max(
@@ -56,6 +66,14 @@ const QueueList = memo(function QueueList({
     () => queue.slice(0, effectiveLimit),
     [queue, effectiveLimit],
   );
+  const rowKeys = useMemo(() => {
+    const seen = new Map<string, number>();
+    return visibleQueue.map((item) => {
+      const count = seen.get(item.id) ?? 0;
+      seen.set(item.id, count + 1);
+      return `${item.id}#${count}`;
+    });
+  }, [visibleQueue]);
 
   const queueContainerRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +84,18 @@ const QueueList = memo(function QueueList({
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const [removingIndex, setRemovingIndex] = useState<number | null>(null);
+  const [restoring, setRestoring] = useState<QueueRestore | null>(null);
+  const playRestore = useCallback(
+    (index: number) => {
+      if (reduceMotion) return;
+      setRestoring({ index, phase: "start" });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => setRestoring({ index, phase: "run" })),
+      );
+      window.setTimeout(() => setRestoring(null), REMOVE_MS + 60);
+    },
+    [reduceMotion],
+  );
   // slide the row out to the left, then drop it once the animation is done
   const handleRemove = useCallback(
     (index: number, id: string) => {
@@ -84,7 +114,11 @@ const QueueList = memo(function QueueList({
               action: {
                 label: t("common.undo"),
                 icon: <Back2Line size={14} />,
-                onClick: undo,
+                onClick: () => {
+                  undo();
+                  const restored = usePlayerStore.getState().queue[index];
+                  if (restored?.id === id) playRestore(index);
+                },
               },
             });
           }
@@ -93,7 +127,7 @@ const QueueList = memo(function QueueList({
         reduceMotion ? 0 : REMOVE_MS,
       );
     },
-    [reduceMotion, t],
+    [reduceMotion, t, playRestore],
   );
 
   const {
@@ -142,6 +176,10 @@ const QueueList = memo(function QueueList({
         const isCurrent = index === currentIndex;
         const isThisDragged = isDragging && index === dragIndex;
         const isRemoving = removingIndex === index;
+        const restoringHere = restoring?.index === index;
+        const restoreBelow = restoring !== null && index > restoring.index;
+        const restoreStart = restoring?.phase === "start";
+        const hidden = isRemoving || (restoringHere && restoreStart);
 
         let shiftY = 0;
         if (
@@ -160,27 +198,42 @@ const QueueList = memo(function QueueList({
         }
         if (removingIndex !== null && index > removingIndex)
           shiftY = -QUEUE_ITEM_HEIGHT;
+        if (restoreBelow && restoreStart) shiftY = -QUEUE_ITEM_HEIGHT;
+
+        const fade = `transform ${REMOVE_FADE_MS}ms ${CALM_EASE}, opacity ${REMOVE_FADE_MS}ms ${CALM_EASE}, filter ${REMOVE_FADE_MS}ms ${CALM_EASE}`;
+        const restoreFade = `transform ${REMOVE_FADE_MS}ms ${CALM_EASE} ${RESTORE_FADE_DELAY_MS}ms, opacity ${REMOVE_FADE_MS}ms ${CALM_EASE} ${RESTORE_FADE_DELAY_MS}ms, filter ${REMOVE_FADE_MS}ms ${CALM_EASE} ${RESTORE_FADE_DELAY_MS}ms`;
+        let transition: string | undefined;
+        if (isDragging)
+          transition = "transform 180ms cubic-bezier(0.2, 0, 0, 1)";
+        else if (restoring)
+          transition = restoreStart
+            ? "none"
+            : restoringHere
+              ? restoreFade
+              : restoreBelow
+                ? `transform ${REMOVE_SHIFT_MS}ms ${CALM_EASE}`
+                : undefined;
+        else if (isRemoving) transition = fade;
+        else if (removingIndex !== null)
+          transition = `transform ${REMOVE_SHIFT_MS}ms ${CALM_EASE} ${REMOVE_SHIFT_DELAY_MS}ms`;
 
         return (
           <div
-            key={`${item.id}-${index}`}
+            key={rowKeys[index]}
             style={{
               position: "absolute",
               top: `${index * QUEUE_ITEM_HEIGHT}px`,
               left: 0,
               width: "100%",
               height: `${QUEUE_ITEM_HEIGHT}px`,
-              transform: isRemoving
-                ? "translateX(-100%)"
+              transform: hidden
+                ? "translateX(-6px) scale(0.98)"
                 : shiftY
                   ? `translateY(${shiftY}px)`
                   : undefined,
-              transition: isDragging
-                ? "transform 180ms cubic-bezier(0.2, 0, 0, 1)"
-                : removingIndex !== null
-                  ? `transform ${REMOVE_MS}ms cubic-bezier(0.4, 0, 0.2, 1), opacity ${REMOVE_MS}ms ease-out`
-                  : undefined,
-              opacity: isThisDragged || isRemoving ? 0 : 1,
+              filter: hidden ? "blur(4px)" : undefined,
+              transition,
+              opacity: isThisDragged || hidden ? 0 : 1,
               zIndex: 1,
             }}
             className="px-0 py-[2px]"

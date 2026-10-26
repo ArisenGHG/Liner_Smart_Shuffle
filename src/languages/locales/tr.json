@@ -405,8 +405,10 @@
     "reverb_amount": "Yankı",
     "beta_visuals": {
       "label": "Uyarı",
-      "title": "Görseller beta aşamasında",
-      "body": "Efektler her karede yeniden çizilir; zayıf cihazlarda pili tüketebilir veya takılmalara yol açabilir.",
+      "ambient_title": "Ambient beta aşamasında",
+      "ambient_body": "Bu parçanın kendine ait animasyonlu bir arka planı var. Hâlâ beta aşamasında ve zayıf cihazları yorabilir; oynatıcı takılırsa daha hafif bir mod seç.",
+      "settings_title": "Görsel kalite",
+      "settings_body": "Tam ekran oynatıcının ne kadar hareketli olacağını seç. Hafif modlar pil tasarrufu sağlar ve zayıf cihazlarda daha akıcı çalışır.",
       "modes": {
         "full": {
           "name": "Tüm efektler",

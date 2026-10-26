@@ -409,8 +409,10 @@
     "reverb_amount": "Pogłos",
     "beta_visuals": {
       "label": "Uwaga",
-      "title": "Wizualizacje w becie",
-      "body": "Efekty są rysowane w każdej klatce i na słabszych urządzeniach mogą rozładowywać baterię lub przycinać.",
+      "ambient_title": "Ambient jest w becie",
+      "ambient_body": "Ten utwór ma własne animowane tło. Jest wciąż w wersji beta i może obciążać słabsze urządzenia, więc jeśli odtwarzacz przycina, wybierz lżejszy tryb.",
+      "settings_title": "Jakość wizualna",
+      "settings_body": "Wybierz, jak bardzo animowany ma być odtwarzacz pełnoekranowy. Lżejsze tryby oszczędzają baterię i działają płynniej na słabszych urządzeniach.",
       "modes": {
         "full": {
           "name": "Wszystkie efekty",

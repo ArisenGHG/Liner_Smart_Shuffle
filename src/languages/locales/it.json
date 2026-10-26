@@ -405,8 +405,10 @@
     "reverb_amount": "Riverbero",
     "beta_visuals": {
       "label": "Attenzione",
-      "title": "Effetti visivi in beta",
-      "body": "Gli effetti vengono ridisegnati a ogni fotogramma e sui dispositivi meno potenti possono consumare batteria o scattare.",
+      "ambient_title": "Ambient è in beta",
+      "ambient_body": "Questo brano ha uno sfondo animato tutto suo. È ancora in beta e può appesantire i dispositivi meno potenti: se il player scatta, scegli una modalità più leggera.",
+      "settings_title": "Qualità visiva",
+      "settings_body": "Scegli quanto si anima il player a schermo intero. Le modalità leggere risparmiano batteria e sono più fluide sui dispositivi meno potenti.",
       "modes": {
         "full": {
           "name": "Tutti gli effetti",

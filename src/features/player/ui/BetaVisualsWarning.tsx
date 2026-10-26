@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckFill, WarningFill } from "@mingcute/react";
+import { CheckFill, Magic2Fill, WarningFill } from "@mingcute/react";
 import { useTranslation } from "@/languages";
 import { cn, isWeakDevice } from "@/shared/lib";
 import { ISLAND_SURFACE } from "@/shared/ui";
@@ -19,6 +19,8 @@ export function BetaVisualsWarning({ docked }: BetaVisualsWarningProps) {
   const fullMode = mode === "full";
   const strained = useFrameStrain(fullMode);
   const warning = fullMode && (ambientAvailable || strained || isWeakDevice());
+  const Icon = warning ? WarningFill : Magic2Fill;
+  const copy = ambientAvailable ? "ambient" : "settings";
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -62,7 +64,7 @@ export function BetaVisualsWarning({ docked }: BetaVisualsWarningProps) {
             {t("player.beta_visuals.label")}
           </span>
         )}
-        <WarningFill size={16} />
+        <Icon size={16} />
       </button>
 
       <AnimatePresence>
@@ -80,11 +82,14 @@ export function BetaVisualsWarning({ docked }: BetaVisualsWarningProps) {
             )}
           >
             <div className="flex items-center gap-[6px] text-[13px] font-[600] leading-[1.25] tracking-[-0.01em] text-text-primary">
-              <WarningFill size={14} className="shrink-0 text-yellow-400" />
-              {t("player.beta_visuals.title")}
+              <Icon
+                size={14}
+                className={cn("shrink-0", warning && "text-yellow-400")}
+              />
+              {t(`player.beta_visuals.${copy}_title`)}
             </div>
             <p className="mt-[4px] mb-0 text-[11.5px] leading-[1.4] text-text-secondary">
-              {t("player.beta_visuals.body")}
+              {t(`player.beta_visuals.${copy}_body`)}
             </p>
             <div className="mt-[9px] flex flex-col gap-[4px]">
               {VISUAL_MODES.map((option) => {
