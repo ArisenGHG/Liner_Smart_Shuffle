@@ -23,6 +23,7 @@ import { LuShuffle } from "react-icons/lu";
 import Button from "@/shared/ui/Button";
 import SongCardWithMenu from "@/features/player/ui/SongCardWithMenu";
 import CoverImage from "@/features/covers/ui/CoverImage";
+import { preloadCoverArt } from "@/features/covers/lib/coverArt";
 import { DailyMixCover } from "@/features/home";
 import { playerEngine } from "@/features/player";
 import { AnimatePresence, motion } from "framer-motion";
@@ -121,19 +122,7 @@ function CollectionContent() {
       }
     }, 150);
 
-    const promises = urlsToPreload.map(
-      (url) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.src = url;
-          if (img.complete) {
-            resolve();
-            return;
-          }
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-        }),
-    );
+    const promises = urlsToPreload.map((url) => preloadCoverArt(url));
 
     Promise.all(promises).then(() => {
       if (active && !settled) {

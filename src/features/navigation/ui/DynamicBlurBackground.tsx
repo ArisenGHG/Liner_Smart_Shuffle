@@ -6,22 +6,31 @@ export interface DynamicBlurBackgroundProps {
   isDark?: boolean;
 }
 
-/**
- * Page-level blurred cover backdrop. Pages opt in via `usePageBackdrop`;
- * without one the canvas stays plain so nothing flashes while a page loads.
- */
+interface ShownCover {
+  src: string | null;
+  crossOrigin?: "anonymous";
+}
+
 export function DynamicBlurBackground({
   isDark = true,
 }: DynamicBlurBackgroundProps) {
-  const { effectiveCoverSrc, pageBackdropOptions } = useActiveBackgroundCover();
+  const { cover, pageBackdropOptions } = useActiveBackgroundCover();
+  const [shown, setShown] = useState<ShownCover | null>(null);
 
-  const [hasShownCover, setHasShownCover] = useState(false);
-  if (effectiveCoverSrc && !hasShownCover) setHasShownCover(true);
-  if (!effectiveCoverSrc && !hasShownCover) return null;
+  if (cover.kind === "ready") {
+    if (shown?.src !== cover.src || shown.crossOrigin !== cover.crossOrigin) {
+      setShown({ src: cover.src, crossOrigin: cover.crossOrigin });
+    }
+  } else if (cover.kind === "none" && shown && shown.src !== null) {
+    setShown({ src: null });
+  }
+
+  if (!shown) return null;
 
   return (
     <PageCoverBackdrop
-      coverSrc={effectiveCoverSrc ?? null}
+      coverSrc={shown.src}
+      coverCrossOrigin={shown.crossOrigin}
       isDark={isDark}
       blur={pageBackdropOptions?.blur}
       dim={pageBackdropOptions?.dim}

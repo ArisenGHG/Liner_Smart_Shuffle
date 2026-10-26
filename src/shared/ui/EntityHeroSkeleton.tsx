@@ -1,13 +1,14 @@
+import type { ReactNode } from "react";
 import { HERO_SUBTITLE_CLASS, HERO_TITLE_CLASS } from "./EntityHero";
 
 export interface EntityHeroSkeletonProps {
-  coverUrl?: string;
+  cover?: ReactNode;
   title?: string;
   subtitle?: string;
 }
 
 export function EntityHeroSkeleton({
-  coverUrl,
+  cover,
   title,
   subtitle,
 }: EntityHeroSkeletonProps = {}) {
@@ -19,17 +20,7 @@ export function EntityHeroSkeleton({
       }
     >
       <div className="relative h-[168px] w-[168px] shrink-0 overflow-hidden rounded-[10px] bg-border-alpha-14">
-        {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt=""
-            draggable={false}
-            decoding="sync"
-            className="h-full w-full object-cover select-none"
-          />
-        ) : (
-          <div className="skeleton-shimmer h-full w-full" />
-        )}
+        {cover ?? <div className="skeleton-shimmer h-full w-full" />}
       </div>
 
       <div

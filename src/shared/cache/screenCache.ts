@@ -1,6 +1,7 @@
 export interface ScreenCacheEntry<T = unknown> {
   data: T;
   savedAt: number;
+  sessionOnly?: boolean;
 }
 
 const DB_NAME = "liner_screen_cache_v1";
@@ -131,10 +132,16 @@ export function readScreenCache<T>(
   return entries.get(key) as ScreenCacheEntry<T> | undefined;
 }
 
-export function writeScreenCache<T>(key: string, data: T): ScreenCacheEntry<T> {
-  const entry: ScreenCacheEntry<T> = { data, savedAt: Date.now() };
+export function writeScreenCache<T>(
+  key: string,
+  data: T,
+  { persist = true }: { persist?: boolean } = {},
+): ScreenCacheEntry<T> {
+  const entry: ScreenCacheEntry<T> = persist
+    ? { data, savedAt: Date.now() }
+    : { data, savedAt: Date.now(), sessionOnly: true };
   entries.set(key, entry);
-  pendingWrites.set(key, entry);
+  pendingWrites.set(key, persist ? entry : null);
   scheduleFlush();
   notify(key);
   return entry;
@@ -144,6 +151,7 @@ export function touchScreenCache(key: string): void {
   const entry = entries.get(key);
   if (!entry) return;
   entry.savedAt = Date.now();
+  if (entry.sessionOnly) return;
   pendingWrites.set(key, entry);
   scheduleFlush();
 }

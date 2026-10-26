@@ -169,10 +169,14 @@ describe("cover registry memory", () => {
     const broken = "https://example.com/covers/broken.jpg";
     const failed = preloadCoverArt(broken);
     constructed[1].dispatchEvent(new Event("error"));
+    await vi.waitFor(() => expect(constructed.length).toBe(3));
+    expect(constructed[2].crossOrigin).toBeFalsy();
+    expect(constructed[2].src).toBe(broken);
+    constructed[2].dispatchEvent(new Event("error"));
     await failed;
     expect(isCoverReady(broken)).toBe(false);
     void preloadCoverArt(broken);
-    expect(constructed.length).toBe(3);
-    expect(constructed[2].src).toBe(broken);
+    expect(constructed.length).toBe(4);
+    expect(constructed[3].src).toBe(broken);
   });
 });

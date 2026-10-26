@@ -6,6 +6,7 @@ type CoverStatus = "loading" | "loaded" | "error";
 interface CoverEntry {
   status: CoverStatus;
   effectiveUrl?: string;
+  opaque?: boolean;
   promise: Promise<void>;
 }
 
@@ -102,9 +103,9 @@ function subscribe(url: string, listener: () => void): () => void {
   };
 }
 
-function createCoverImage(): HTMLImageElement {
+function createCoverImage(cors = true): HTMLImageElement {
   const img = new window.Image();
-  img.crossOrigin = "anonymous";
+  if (cors) img.crossOrigin = "anonymous";
   img.decoding = "async";
   return img;
 }
@@ -128,8 +129,16 @@ export function getCoverElement(
 ): HTMLImageElement | undefined {
   if (!url) return undefined;
   const key = resolveKey(url);
-  if (entries.get(key)?.status !== "loaded") return undefined;
+  const entry = entries.get(key);
+  if (entry?.status !== "loaded" || entry.opaque) return undefined;
   return decoded.get(key);
+}
+
+export function getCoverCrossOrigin(
+  url: string | undefined,
+): "anonymous" | undefined {
+  if (!url) return "anonymous";
+  return entries.get(resolveKey(url))?.opaque ? undefined : "anonymous";
 }
 
 function isCoverSettled(url: string | undefined): boolean {
@@ -141,22 +150,33 @@ function isCoverSettled(url: string | undefined): boolean {
 export function markCoverReady(
   url: string | undefined,
   effectiveUrl?: string,
+  opaque = false,
 ): void {
   if (!url) return;
   const key = resolveKey(url);
   const resolved = effectiveUrl ?? url;
   const entry = entries.get(key);
   if (entry) {
+    if (entry.status === "loaded" && !entry.opaque && opaque) return;
     const changed =
-      entry.status !== "loaded" || entry.effectiveUrl !== resolved;
-    if (entry.effectiveUrl !== resolved) decoded.delete(key);
+      entry.status !== "loaded" ||
+      entry.effectiveUrl !== resolved ||
+      Boolean(entry.opaque) !== opaque;
+    if (entry.effectiveUrl !== resolved || Boolean(entry.opaque) !== opaque) {
+      decoded.delete(key);
+    }
     setEffectiveUrl(key, entry, resolved);
     entry.status = "loaded";
+    entry.opaque = opaque;
     touch(key, entry);
     if (changed) notify(key);
     return;
   }
-  const created: CoverEntry = { status: "loaded", promise: Promise.resolve() };
+  const created: CoverEntry = {
+    status: "loaded",
+    opaque,
+    promise: Promise.resolve(),
+  };
   setEffectiveUrl(key, created, resolved);
   storeEntry(key, created);
   notify(key);
@@ -170,7 +190,7 @@ function decodeLoadedCover(key: string, entry: CoverEntry): Promise<void> {
   const inflight = decoding.get(key);
   if (inflight) return inflight;
   const src = entry.effectiveUrl ?? key;
-  const img = createCoverImage();
+  const img = createCoverImage(!entry.opaque);
   const promise = new Promise<void>((resolve) => {
     const finish = (ok: boolean) => {
       if (decoding.get(key) === promise) decoding.delete(key);
@@ -214,30 +234,43 @@ export function preloadCoverArt(url: string | undefined): Promise<void> {
   let entry: CoverEntry;
   const promise = new Promise<void>((resolve) => {
     let triedFallback = false;
-    const settle = (status: CoverStatus, effectiveUrl?: string) => {
+    const settle = (
+      status: CoverStatus,
+      loadedImg?: HTMLImageElement,
+      opaque = false,
+    ) => {
       if (
         entries.get(key) === entry &&
         !(status === "error" && entry.status === "loaded")
       ) {
         entry.status = status;
-        if (effectiveUrl) setEffectiveUrl(key, entry, effectiveUrl);
-        if (status === "loaded") rememberDecoded(key, img);
+        entry.opaque = opaque;
+        if (loadedImg) {
+          setEffectiveUrl(key, entry, loadedImg.src);
+          rememberDecoded(key, loadedImg);
+        }
         trimEntries();
       }
       notify(key);
       resolve();
     };
-    img.onload = () => settle("loaded", img.src);
+    const loadOpaque = () => {
+      const opaqueImg = createCoverImage(false);
+      opaqueImg.onload = () => settle("loaded", opaqueImg, true);
+      opaqueImg.onerror = () => settle("error");
+      opaqueImg.src = key;
+    };
+    img.onload = () => settle("loaded", img);
     img.onerror = () => {
       if (!triedFallback) {
         triedFallback = true;
         void prepareCoverFallback(key).then((fallback) => {
           if (fallback) img.src = fallback;
-          else settle("error");
+          else loadOpaque();
         });
         return;
       }
-      settle("error");
+      loadOpaque();
     };
   });
 
@@ -287,6 +320,22 @@ export function useRenderedCoverSrc(
     () => effectiveCoverSrc(url),
     () => url,
   );
+}
+
+export function useCoverCrossOrigin(
+  url: string | undefined,
+): "anonymous" | undefined {
+  return useSyncExternalStore(
+    useCoverSubscription(url, false),
+    () => getCoverCrossOrigin(url),
+    () => "anonymous",
+  );
+}
+
+export function loadCoverElement(
+  url: string | undefined,
+): Promise<HTMLImageElement | undefined> {
+  return preloadCoverArt(url).then(() => getCoverElement(url));
 }
 
 export function useCoverElement(

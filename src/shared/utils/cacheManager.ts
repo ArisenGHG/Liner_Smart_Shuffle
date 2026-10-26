@@ -1,4 +1,5 @@
 import { linerDb } from "@/shared/storage/linerDb";
+import { isLocalTrackId } from "@/shared/media/local";
 import {
   audioCache,
   DEFAULT_AUDIO_CACHE_LIMIT_BYTES,
@@ -409,7 +410,7 @@ export async function clearStorageCategories(
 
   if (set.has("lyrics")) {
     lyricsCache.clear();
-    await linerDb.clearStore("lyrics");
+    await linerDb.clearCachedLyrics(isLocalTrackId);
     if (typeof window !== "undefined" && window.localStorage) {
       localStorage.removeItem("lyrics-storage");
       const toRemove: string[] = [];

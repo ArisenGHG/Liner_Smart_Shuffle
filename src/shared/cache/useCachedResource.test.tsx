@@ -26,6 +26,20 @@ function Probe({
   return null;
 }
 
+function SessionProbe({
+  cacheKey,
+  load,
+}: {
+  cacheKey: string;
+  load: () => Promise<string[]>;
+}) {
+  latest = useCachedResource(cacheKey, load, {
+    isFresh: freshFor(60_000),
+    sessionOnly: true,
+  });
+  return null;
+}
+
 describe("useCachedResource", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -67,6 +81,20 @@ describe("useCachedResource", () => {
     expect(latest?.data).toEqual(["same"]);
     expect(renders).toBe(1);
     expect(readScreenCache("stale")?.savedAt).toBe(Date.now());
+  });
+
+  it("ignores a copy from disk in session-only mode and shows only the server result", async () => {
+    writeScreenCache("mixes", ["from disk"]);
+    let resolve: (value: string[]) => void = () => undefined;
+    const load = vi.fn(() => new Promise<string[]>((done) => (resolve = done)));
+    await act(async () => {
+      root.render(<SessionProbe cacheKey="mixes" load={load} />);
+    });
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(latest).toEqual({ data: undefined, isLoading: true });
+    await act(async () => resolve(["from server"]));
+    expect(latest).toEqual({ data: ["from server"], isLoading: false });
+    expect(readScreenCache("mixes")?.sessionOnly).toBe(true);
   });
 
   it("stops reporting loading when the first load fails", async () => {

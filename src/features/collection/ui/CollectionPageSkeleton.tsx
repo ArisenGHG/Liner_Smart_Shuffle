@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { EntityHeroSkeleton } from "@/shared/ui";
+import CoverImage from "@/features/covers/ui/CoverImage";
 import type { CollectionPreview } from "../lib/collectionPreview";
 
 const TRACK_TITLE_WIDTHS = [
@@ -42,7 +43,18 @@ function CollectionPageSkeletonComponent({
       <div className="relative z-10 flex flex-col gap-[20px] h-full w-full min-h-0 box-border">
         <div className="shrink-0 pl-[16px] pr-[12px] pt-[8px]">
           <EntityHeroSkeleton
-            coverUrl={preview?.coverUrl}
+            cover={
+              preview?.coverUrl ? (
+                <CoverImage
+                  src={preview.coverUrl}
+                  alt=""
+                  fill
+                  sizes="180px"
+                  className="object-cover"
+                  draggable={false}
+                />
+              ) : undefined
+            }
             title={preview?.title}
             subtitle={preview?.subtitle}
           />

@@ -36,6 +36,12 @@ export interface LyricsCandidate extends RawLyricsCandidate {
   quality: LyricsQuality;
 }
 
+export interface LyricsSearchResult {
+  provider?: string;
+  cached: boolean;
+  candidate: LyricsCandidate;
+}
+
 export type LyricsStreamEvent =
   | {
       type: "metadata";

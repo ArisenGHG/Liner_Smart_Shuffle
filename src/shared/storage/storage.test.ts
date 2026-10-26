@@ -158,7 +158,6 @@ describe("linerDb storage layer", () => {
     expect(lineRecord?.activeProvider).toBe("lrclib");
     expect(lineRecord?.syncLevel).toBe("line_level");
 
-    // cadence / polaris with line_level should not be cached
     await linerDb.putLyrics({
       trackId: "track_cadence_line",
       syncLevel: "line_level",
@@ -188,7 +187,8 @@ describe("linerDb storage layer", () => {
       updatedAt: initialTime,
     });
     const cadenceRecord = await linerDb.getLyrics("track_cadence_line");
-    expect(cadenceRecord).toBeNull();
+    expect(cadenceRecord?.activeProvider).toBe("cadence");
+    expect(cadenceRecord?.syncLevel).toBe("line_level");
   });
 
   it("stores artist data and calculates total artist bytes", async () => {

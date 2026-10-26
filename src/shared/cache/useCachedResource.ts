@@ -11,14 +11,11 @@ export interface CachePolicy {
   isFresh: (savedAt: number) => boolean;
   maxAgeMs?: number;
   revalidateOnFocus?: boolean;
+  sessionOnly?: boolean;
 }
 
 export function freshFor(ms: number): (savedAt: number) => boolean {
   return (savedAt) => Date.now() - savedAt < ms;
-}
-
-export function freshUntilMidnight(savedAt: number): boolean {
-  return new Date(savedAt).toDateString() === new Date().toDateString();
 }
 
 const inFlight = new Map<string, Promise<void>>();
@@ -37,27 +34,29 @@ function sameData(a: unknown, b: unknown): boolean {
 export function revalidateResource<T>(
   key: string,
   load: () => Promise<T>,
-  options: { force?: boolean } = {},
+  options: { force?: boolean; persist?: boolean } = {},
 ): Promise<void> {
+  const persist = options.persist ?? true;
   const running = inFlight.get(key);
   if (running) {
     if (!options.force || queuedKeys.has(key)) return running;
     queuedKeys.add(key);
     return running.then(() => {
       queuedKeys.delete(key);
-      return revalidateResource(key, load);
+      return revalidateResource(key, load, { persist });
     });
   }
   const task = load()
     .then((data) => {
       const wasFailed = failedKeys.delete(key);
       const current = readScreenCache<T>(key);
-      if (current && sameData(current.data, data)) {
+      const comparable = current && (persist || current.sessionOnly);
+      if (comparable && sameData(current.data, data)) {
         touchScreenCache(key);
         if (wasFailed) notifyScreenCache(key);
         return;
       }
-      writeScreenCache(key, data);
+      writeScreenCache(key, data, { persist });
     })
     .catch(() => {
       if (failedKeys.has(key)) return;
@@ -90,9 +89,13 @@ export function useCachedResource<T>(
 
   useEffect(() => {
     const check = () => {
+      const { isFresh, sessionOnly } = policyRef.current;
       const current = readScreenCache(key);
-      if (!current || !policyRef.current.isFresh(current.savedAt)) {
-        void revalidateResource(key, () => loadRef.current());
+      const usableNow = current && (!sessionOnly || current.sessionOnly);
+      if (!usableNow || !isFresh(current.savedAt)) {
+        void revalidateResource(key, () => loadRef.current(), {
+          persist: !sessionOnly,
+        });
       }
     };
     check();
@@ -102,7 +105,9 @@ export function useCachedResource<T>(
   }, [key]);
 
   const usable =
-    entry && (!policy.maxAgeMs || Date.now() - entry.savedAt <= policy.maxAgeMs)
+    entry &&
+    (!policy.sessionOnly || entry.sessionOnly) &&
+    (!policy.maxAgeMs || Date.now() - entry.savedAt <= policy.maxAgeMs)
       ? entry
       : undefined;
   return { data: usable?.data, isLoading: !usable && !failed };

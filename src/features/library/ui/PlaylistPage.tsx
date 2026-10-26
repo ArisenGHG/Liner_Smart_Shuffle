@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { preloadCoverArt } from "@/features/covers/lib/coverArt";
 import {
   useCallback,
   useEffect,
@@ -404,19 +405,7 @@ function LibraryPlaylistContent() {
       }
     }, 150);
 
-    const promises = urlsToPreload.map(
-      (url) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.src = url;
-          if (img.complete) {
-            resolve();
-            return;
-          }
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-        }),
-    );
+    const promises = urlsToPreload.map((url) => preloadCoverArt(url));
 
     Promise.all(promises).then(() => {
       if (active && !settled) {

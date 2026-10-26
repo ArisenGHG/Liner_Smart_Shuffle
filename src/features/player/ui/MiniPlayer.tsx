@@ -36,7 +36,7 @@ import { EqualizerPicker } from "./EqualizerPicker";
 import { isEqActive } from "../engine/equalizer";
 import { TimelineSlider } from "./TimelineSlider";
 import { useTheme } from "next-themes";
-import { useCoverReady, CoverImage } from "@/features/covers";
+import { useCoverReady, CoverImage, loadCoverElement } from "@/features/covers";
 import { useHasPageBackdrop } from "@/features/settings/store/customizationStore";
 import { ArtistLink } from "@/features/artist";
 import { isLocalTrackId } from "@/shared/media/local";
@@ -235,9 +235,9 @@ function MiniPlayer({
       setAccentColorSolid(isLight ? "rgb(23, 23, 23)" : "rgb(255, 255, 255)");
       return;
     }
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
+    let active = true;
+    void loadCoverElement(coverUrl).then((img) => {
+      if (!active || !img) return;
       try {
         const canvas = document.createElement("canvas");
         canvas.width = 64;
@@ -255,8 +255,10 @@ function MiniPlayer({
         );
         setAccentColorSolid(isLight ? "rgb(23, 23, 23)" : "rgb(255, 255, 255)");
       }
+    });
+    return () => {
+      active = false;
     };
-    img.src = coverUrl;
   }, [coverUrl, isLight]);
 
   const extractAccentColor = useCallback(

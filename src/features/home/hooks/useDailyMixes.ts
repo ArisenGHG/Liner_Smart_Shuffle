@@ -4,10 +4,7 @@ import { queryCache } from "@/shared/cache/queryCache";
 import type { Track } from "@/shared/types";
 import type { CollectionPageData } from "@/features/collection/hooks/useCollection";
 import { loadWithRetry, useSessionOwner } from "./sessionAwareLoad";
-import {
-  freshUntilMidnight,
-  useCachedResource,
-} from "@/shared/cache/useCachedResource";
+import { freshFor, useCachedResource } from "@/shared/cache/useCachedResource";
 
 export interface DailyMix {
   id: string;
@@ -114,7 +111,11 @@ export function dailyMixesCacheKey(owner: string): string {
   return `home:daily-mixes:${owner}`;
 }
 
-const DAILY_MIXES_POLICY = { isFresh: freshUntilMidnight };
+const DAILY_MIXES_POLICY = {
+  isFresh: freshFor(10 * 60_000),
+  revalidateOnFocus: true,
+  sessionOnly: true,
+};
 
 export function useDailyMixes() {
   const owner = useSessionOwner();

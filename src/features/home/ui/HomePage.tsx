@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PopularTracksSection from "./PopularTracksSection";
 import DailyMixesSection from "./DailyMixesSection";
-import HomePageSkeleton from "./HomePageSkeleton";
+import HomePageSkeleton, { MixesSectionSkeleton } from "./HomePageSkeleton";
 import { usePopularTracksAllTime } from "../hooks/usePopularTracks";
 import { useListeningNow } from "../hooks/useListeningNow";
 import ListeningNowSection from "./ListeningNowSection";
@@ -43,8 +43,8 @@ export default function HomePage() {
     usesMixBackdrop ? { blur: 56, dim: 0.22 } : undefined,
   );
 
+  const hasMixesSlot = hasMixes || mixesLoading;
   const isDataLoading =
-    mixesLoading ||
     tracksLoading ||
     allTimeLoading ||
     recentLoading ||
@@ -68,12 +68,18 @@ export default function HomePage() {
       <div className="relative z-1 grid grid-cols-1 items-start w-full">
         {isReady && (
           <div className="col-start-1 row-start-1 w-full pb-[16px]">
-            {hasMixes && (
-              <DailyMixesSection
-                mixes={dailyMixes}
-                headingMarginTop="mt-0"
-                accentCoverUrl={homeBackdrop.cover}
-              />
+            {mixesLoading ? (
+              <MixesSectionSkeleton />
+            ) : (
+              hasMixes && (
+                <div style={{ animation: "page-enter 200ms ease-out" }}>
+                  <DailyMixesSection
+                    mixes={dailyMixes}
+                    headingMarginTop="mt-0"
+                    accentCoverUrl={homeBackdrop.cover}
+                  />
+                </div>
+              )
             )}
 
             {popularAlbums.length > 0 && (
@@ -81,7 +87,7 @@ export default function HomePage() {
                 title={t("home.popularAlbums")}
                 icon={<AlbumFill className="w-6 h-6 text-emerald-400" />}
                 items={popularAlbums}
-                headingMarginTop={hasMixes ? "mt-[22px]" : "mt-0"}
+                headingMarginTop={hasMixesSlot ? "mt-[22px]" : "mt-0"}
               />
             )}
 
@@ -91,7 +97,9 @@ export default function HomePage() {
                 icon={<FireFill className="w-6 h-6 text-amber-500" />}
                 tracks={listeningNow}
                 headingMarginTop={
-                  hasMixes || popularAlbums.length > 0 ? "mt-[22px]" : "mt-0"
+                  hasMixesSlot || popularAlbums.length > 0
+                    ? "mt-[22px]"
+                    : "mt-0"
                 }
               />
             )}

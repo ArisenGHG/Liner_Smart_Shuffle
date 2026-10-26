@@ -24,6 +24,7 @@ import {
   useLyricsStore,
   lyricsCache,
   shouldCacheLyricsCandidate,
+  isProvisionalLyricsCandidate,
   compareLyricsCandidates,
   isBetterLyricsCandidate,
   type CachedLyricsItem,
@@ -99,6 +100,8 @@ function newRadioWaveId(): string {
 }
 
 type LyricsHint = { title: string; artist: string; durationMs?: number };
+
+const localLyricsMisses = new Set<string>();
 
 function lyricsHint(track: Track): LyricsHint {
   const artist =
@@ -1426,6 +1429,142 @@ class PlayerEngine {
     return prefetchPromise;
   }
 
+  private showLyricsCandidate(
+    trackId: string,
+    candidate: LyricsCandidate,
+    availableProviders: CachedLyricsItem["availableProviders"],
+  ): void {
+    const parsed = parseRawLyrics(
+      candidate.lyrics.content,
+      candidate.lyrics.format,
+    );
+    useLyricsStore.getState().setLyricsState({
+      lyricsLoading: false,
+      lyricsError: null,
+      rawLyrics: candidate.lyrics.content,
+      rawFormat: candidate.lyrics.format,
+      braccatoLyrics: parsed.braccatoLyrics,
+      syncedLines: parsed.syncedLines,
+      plainLyrics: parsed.plainLyrics,
+      lyricsQuality: candidate.quality.total,
+      currentLyricsTrackId: trackId,
+      activeProvider: candidate.provider,
+      availableProviders,
+    });
+  }
+
+  private showNoLyrics(trackId: string, lyricsError: string | null): void {
+    useLyricsStore.getState().setLyricsState({
+      lyricsLoading: false,
+      lyricsError,
+      rawLyrics: null,
+      rawFormat: null,
+      braccatoLyrics: [],
+      syncedLines: [],
+      plainLyrics: null,
+      lyricsQuality: 0,
+      currentLyricsTrackId: trackId,
+      activeProvider: null,
+      availableProviders: [],
+    });
+  }
+
+  private async loadLocalTrackLyrics(
+    track: Track,
+    token: number,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const trackId = track.id;
+    const isCurrent = () => token === this.lyricsLoadToken && !signal.aborted;
+
+    const stored =
+      lyricsCache.get(trackId) ||
+      (await linerDb.getLyrics(trackId).catch(() => null));
+    if (!isCurrent()) return;
+    const storedCandidate = stored?.candidate ?? null;
+    if (storedCandidate) {
+      this.showLyricsCandidate(
+        trackId,
+        storedCandidate,
+        stored?.availableProviders || [],
+      );
+      if (!isProvisionalLyricsCandidate(storedCandidate)) return;
+    }
+
+    const hint = lyricsHint(track);
+    if (
+      !hint.title.trim() ||
+      !hint.artist.trim() ||
+      localLyricsMisses.has(trackId)
+    ) {
+      if (!storedCandidate) this.showNoLyrics(trackId, null);
+      return;
+    }
+
+    if (!storedCandidate) {
+      useLyricsStore.getState().setLyricsState({
+        lyricsLoading: true,
+        lyricsError: null,
+        currentLyricsTrackId: trackId,
+      });
+    }
+    log("cyan", "lyrics", `searching for local "${track.title}"`);
+
+    try {
+      const result = await api.searchLyrics(hint, signal);
+      if (!isCurrent()) return;
+      if (!result) {
+        localLyricsMisses.add(trackId);
+        if (!storedCandidate) this.showNoLyrics(trackId, null);
+        log("cyan", "lyrics", `no lyrics for local "${track.title}"`);
+        return;
+      }
+      const candidate = result.candidate;
+      if (
+        storedCandidate &&
+        !isBetterLyricsCandidate(candidate, storedCandidate)
+      ) {
+        return;
+      }
+      const providers = [
+        {
+          provider: candidate.provider,
+          syncLevel: candidate.syncLevel,
+          quality: candidate.quality.total,
+          candidate,
+        },
+      ];
+      this.showLyricsCandidate(trackId, candidate, providers);
+      lyricsCache.set(trackId, candidate, providers);
+      await linerDb.putLyrics({
+        trackId,
+        syncLevel: candidate.syncLevel,
+        quality: candidate.quality.total,
+        activeProvider: candidate.provider,
+        availableProviders: providers,
+        rawLyrics: candidate.lyrics.content,
+        rawFormat: candidate.lyrics.format,
+        candidate,
+        lastCheckedAt: Date.now(),
+        updatedAt: Date.now(),
+        userLocked: true,
+      });
+      log(
+        "green",
+        "lyrics",
+        `stored ${candidate.provider} lyrics for local "${track.title}"`,
+      );
+    } catch (error) {
+      if (!isCurrent()) return;
+      if (!storedCandidate) this.showNoLyrics(trackId, "Failed to load lyrics.");
+      log(
+        "red",
+        "lyrics",
+        `local search failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   private async fetchLyricsForTrack(track: Track | null): Promise<void> {
     const lyricsStore = useLyricsStore.getState();
 
@@ -1444,8 +1583,15 @@ class PlayerEngine {
     }
     if (isLocalTrackId(trackId)) {
       this.currentLyricsTrackId = trackId;
+      const localToken = ++this.lyricsLoadToken;
       this.lyricsAbort?.abort();
-      lyricsStore.reset();
+      const localController = new AbortController();
+      this.lyricsAbort = localController;
+      await this.loadLocalTrackLyrics(
+        track,
+        localToken,
+        localController.signal,
+      );
       return;
     }
 
@@ -1502,7 +1648,9 @@ class PlayerEngine {
         `cache hit for "${track.title}" (age: ${Math.round((Date.now() - lastChecked) / 1000)}s)`,
       );
       const isStale = Date.now() - lastChecked >= SEVEN_DAYS_MS;
-      if (!isStale || (cached as any).userLocked) {
+      const needsRefresh =
+        isStale || isProvisionalLyricsCandidate(cached.candidate);
+      if (!needsRefresh || (cached as any).userLocked) {
         return;
       }
 

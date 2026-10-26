@@ -557,6 +557,7 @@ import type {
   ApiUserPlaylist,
   ApiUserPlaylistItem,
   LyricsStreamEvent,
+  LyricsSearchResult,
   ImportJob,
   ImportReview,
   ImportReviewDecision,
@@ -1029,6 +1030,28 @@ export const api = {
     return getLocalImportHandler()
       .finalize(importId, tracks ?? [], title, description)
       .then(({ finalized }) => ({ denied: "all" as const, finalized }));
+  },
+
+  async searchLyrics(
+    hint: { title: string; artist: string; durationMs?: number },
+    signal?: AbortSignal,
+  ): Promise<LyricsSearchResult | null> {
+    const params = new URLSearchParams({
+      title: hint.title.trim(),
+      artist: hint.artist.trim(),
+      ...(hint.durationMs && hint.durationMs > 0
+        ? { durationMs: String(Math.round(hint.durationMs)) }
+        : {}),
+    });
+    try {
+      return await request<LyricsSearchResult>(
+        `/v1/me/lyrics/search?${params.toString()}`,
+        { signal },
+      );
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return null;
+      throw err;
+    }
   },
 
   async *streamLyrics(

@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from "react";
 
 export interface PageCoverBackdropProps {
   coverSrc: string | null;
+  coverCrossOrigin?: "anonymous";
   isDark?: boolean;
   /** blur radius in px */
   blur?: number;
@@ -65,6 +66,7 @@ let nextLayerId = 1;
  */
 function PageCoverBackdropComponent({
   coverSrc,
+  coverCrossOrigin = "anonymous",
   isDark = true,
   blur = 32,
   dim = 0,
@@ -76,6 +78,9 @@ function PageCoverBackdropComponent({
   // id of the layer that is currently shown; everything else fades out
   const [visibleId, setVisibleId] = useState<number | null>(null);
   const [bottomRgb, setBottomRgb] = useState<string | null>(null);
+  const [opaqueSrcs, setOpaqueSrcs] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const cleanupTimerRef = useRef<number | null>(null);
   const coverSrcRef = useRef(coverSrc);
   coverSrcRef.current = coverSrc;
@@ -167,10 +172,19 @@ function PageCoverBackdropComponent({
             key={layer.id}
             src={layer.src}
             alt=""
-            crossOrigin="anonymous"
+            crossOrigin={
+              coverCrossOrigin && !opaqueSrcs.has(layer.src)
+                ? coverCrossOrigin
+                : undefined
+            }
             draggable={false}
             decoding="async"
             onLoad={(e) => handleLoad(layer, e.currentTarget)}
+            onError={() =>
+              setOpaqueSrcs((prev) =>
+                prev.has(layer.src) ? prev : new Set(prev).add(layer.src),
+              )
+            }
             className="absolute inset-0 h-full w-full object-cover select-none transform-gpu ease-out"
             style={{
               filter: `blur(${blur}px) saturate(130%)`,

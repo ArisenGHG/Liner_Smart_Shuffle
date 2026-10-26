@@ -20,6 +20,7 @@ import AlbumCard from "@/features/collection/ui/AlbumCard";
 import ReleaseCard from "@/features/collection/ui/ReleaseCard";
 import ScrollableRow from "@/shared/ui/ScrollableRow";
 import CoverImage from "@/features/covers/ui/CoverImage";
+import { preloadCoverArt } from "@/features/covers/lib/coverArt";
 import { playerEngine } from "@/features/player";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Track } from "@/shared/types";
@@ -102,9 +103,6 @@ function ArtistContent() {
     if (!data) return [];
     const urls = new Set<string>();
     if (data.coverUrl) urls.add(data.coverUrl);
-    for (const track of data.tracks.slice(0, 8)) {
-      if (track.coverUrl) urls.add(track.coverUrl);
-    }
     return Array.from(urls);
   }, [data]);
 
@@ -125,21 +123,9 @@ function ArtistContent() {
         settled = true;
         setImagesLoaded(true);
       }
-    }, 1000);
+    }, 300);
 
-    const promises = urlsToPreload.map(
-      (url) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.src = url;
-          if (img.complete) {
-            resolve();
-            return;
-          }
-          img.onload = () => resolve();
-          img.onerror = () => resolve();
-        }),
-    );
+    const promises = urlsToPreload.map((url) => preloadCoverArt(url));
 
     Promise.all(promises).then(() => {
       if (active && !settled) {
