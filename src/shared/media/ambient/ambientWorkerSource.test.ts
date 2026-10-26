@@ -33,7 +33,7 @@ function runWorker(script: string) {
 describe("ambient worker runtime", () => {
   it("runs the effect, reports its options and keeps drawing frames", () => {
     const worker = runWorker(
-      "ambient((canvas) => { let n = 0; return { pixelated: true, scale: 0.3, frame() { canvas.frames = ++n; } }; });",
+      "ambient((canvas) => { let n = 0; return { pixelated: true, scale: 0.3, blur: 6, frame() { canvas.frames = ++n; } }; });",
     );
     const canvas = fakeCanvas() as ReturnType<typeof fakeCanvas> & {
       frames?: number;
@@ -44,6 +44,7 @@ describe("ambient worker runtime", () => {
       type: "options",
       pixelated: true,
       scale: 0.3,
+      blur: 6,
     });
     expect(canvas.frames).toBe(5);
   });

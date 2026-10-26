@@ -7,6 +7,7 @@ const DEFAULT_SCALE = 0.5;
 
 export interface AmbientOptions {
   pixelated: boolean;
+  blur: number;
 }
 
 interface WorkerMessage {
@@ -14,6 +15,7 @@ interface WorkerMessage {
   message?: string;
   pixelated?: boolean;
   scale?: number;
+  blur?: number;
 }
 
 function surfaceSize(canvas: HTMLCanvasElement, scale: number) {
@@ -23,6 +25,13 @@ function surfaceSize(canvas: HTMLCanvasElement, scale: number) {
     height: Math.max(1, Math.round(rect.height * scale)),
   };
 }
+
+const DEFAULT_BLUR_PX = 1.5;
+
+const clampBlur = (blur: number | undefined) =>
+  typeof blur === "number" && Number.isFinite(blur)
+    ? Math.min(24, Math.max(0, blur))
+    : DEFAULT_BLUR_PX;
 
 const clampScale = (scale: number | undefined) =>
   scale && scale > 0 ? Math.min(1, Math.max(0.05, scale)) : DEFAULT_SCALE;
@@ -53,7 +62,10 @@ export function useAmbientWorker(
     worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
       if (event.data.type === "options") {
         scale = clampScale(event.data.scale);
-        onOptions({ pixelated: Boolean(event.data.pixelated) });
+        onOptions({
+          pixelated: Boolean(event.data.pixelated),
+          blur: clampBlur(event.data.blur),
+        });
         resize();
         return;
       }

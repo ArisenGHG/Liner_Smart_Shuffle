@@ -45,7 +45,7 @@ self.onmessage = (event) => {
       info = message.info;
       effect = self.ambientSetup(canvas, info) || {};
       effect.frame = effect.frame || (() => {});
-      self.postMessage({ type: "options", pixelated: Boolean(effect.pixelated), scale: Number(effect.scale) || 0 });
+      self.postMessage({ type: "options", pixelated: Boolean(effect.pixelated), scale: Number(effect.scale) || 0, blur: typeof effect.blur === "number" ? effect.blur : undefined });
       start();
     } else if (message.type === "resize" && canvas) {
       canvas.width = message.width;

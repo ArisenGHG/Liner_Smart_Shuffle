@@ -51,9 +51,12 @@ function AmbientCanvas({ script, visible }: AmbientCanvasProps) {
     <div
       ref={hostRef}
       aria-hidden
-      style={{ transitionDuration: `${AMBIENT_FADE_MS}ms` }}
+      style={{
+        transitionDuration: `${AMBIENT_FADE_MS}ms`,
+        filter: `blur(${options?.blur ?? 0}px)`,
+      }}
       className={cn(
-        "pointer-events-none absolute inset-0 blur-[1.5px] transition-opacity ease-out [mask-image:linear-gradient(to_right,black_30%,rgba(0,0,0,0.12)_62%)]",
+        "pointer-events-none absolute inset-0 transition-opacity ease-out [mask-image:linear-gradient(to_right,black_30%,rgba(0,0,0,0.12)_62%)]",
         visible && options ? "opacity-80" : "opacity-0",
       )}
     />
