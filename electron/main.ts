@@ -75,6 +75,7 @@ import { DiscordRpcManager } from "./discord.js";
 import { PoTokenService } from "./youtube/potoken.js";
 import { setupLocalTracks } from "./local-tracks/ipc.js";
 import { registerLocalTrackScheme } from "./local-tracks/protocol.js";
+import { attachZoomControls } from "./zoom.js";
 import {
   YOUTUBE_REQUEST_URLS,
   youtubeOriginFor,
@@ -418,6 +419,7 @@ function createWindow() {
       }
     }
   });
+  attachZoomControls(mainWindow, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
