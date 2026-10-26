@@ -407,7 +407,26 @@
     "preset_nightcore": "1,35x Nightcore",
     "reverb": "Hall",
     "reverb_hint": "Atmosphärischer Raum & Tiefe",
-    "reverb_amount": "Hall"
+    "reverb_amount": "Hall",
+    "beta_visuals": {
+      "label": "Warnung",
+      "title": "Visuals in der Beta",
+      "body": "Effekte werden in jedem Frame neu gezeichnet und können auf schwächeren Geräten den Akku leeren oder ruckeln.",
+      "modes": {
+        "full": {
+          "name": "Alle Effekte",
+          "hint": "Alles an, inklusive unscharfer Textränder"
+        },
+        "balanced": {
+          "name": "Ausgewogen",
+          "hint": "Lebendige Hintergründe, ohne Textunschärfe"
+        },
+        "lite": {
+          "name": "Leicht",
+          "hint": "Ruhiges Cover, schlichter Text"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",

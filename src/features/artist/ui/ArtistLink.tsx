@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   useLayoutEffect,
-  useEffect,
   useCallback,
 } from "react";
 import { useStableNavigate } from "@/shared/hooks/useStableNavigate";
@@ -44,11 +43,13 @@ export default function ArtistLink({
 
   useLayoutEffect(() => {
     measure();
-  });
-
-  useEffect(() => {
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(outer);
+    observer.observe(inner);
+    return () => observer.disconnect();
   }, [measure]);
 
   let innerContent: React.ReactNode = null;

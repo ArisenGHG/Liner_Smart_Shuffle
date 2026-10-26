@@ -489,7 +489,26 @@
     "eq_preset_smooth": "Smooth",
     "eq_preset_smooth_hint": "Softens harsh highs for long listening",
     "eq_preset_rnb": "R&B",
-    "eq_preset_rnb_hint": "Silky vocals over a round, warm low end"
+    "eq_preset_rnb_hint": "Silky vocals over a round, warm low end",
+    "beta_visuals": {
+      "label": "Warning",
+      "title": "Visuals are in beta",
+      "body": "Effects redraw every frame and can drain the battery or cause stutter on weaker devices.",
+      "modes": {
+        "full": {
+          "name": "All effects",
+          "hint": "Everything on, including blurred lyric edges"
+        },
+        "balanced": {
+          "name": "Balanced",
+          "hint": "Live backgrounds, no lyric blur"
+        },
+        "lite": {
+          "name": "Lite",
+          "hint": "Still cover, plain lyrics"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",

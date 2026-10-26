@@ -12,6 +12,8 @@ import {
 } from "@mingcute/react";
 import { useLyricsStore } from "../store/lyricsStore";
 import { useTranslation } from "@/languages";
+import { cn } from "@/shared/lib";
+import { ISLAND_SURFACE } from "@/shared/ui";
 
 function formatOffsetBadge(ms: number): string {
   if (ms === 0) return "0.0s";
@@ -139,7 +141,12 @@ export function LyricsProviderIsland() {
       ref={containerRef}
       className="relative inline-flex items-center pointer-events-auto select-none"
     >
-      <div className="inline-flex items-center h-[32px] min-h-[32px] max-h-[32px] box-border rounded-lg bg-black/50 backdrop-blur-xl px-[3px] gap-[2px] text-white">
+      <div
+        className={cn(
+          ISLAND_SURFACE,
+          "inline-flex items-center h-[32px] min-h-[32px] max-h-[32px] box-border px-[3px] gap-[2px] text-white",
+        )}
+      >
         {hasMultiple && (
           <button
             type="button"

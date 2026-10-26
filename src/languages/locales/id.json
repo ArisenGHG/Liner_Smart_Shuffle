@@ -404,7 +404,26 @@
     "preset_nightcore": "1.35x Nightcore",
     "reverb": "Reverb",
     "reverb_hint": "Ruang atmosferik & kedalaman ambient",
-    "reverb_amount": "Reverb"
+    "reverb_amount": "Reverb",
+    "beta_visuals": {
+      "label": "Peringatan",
+      "title": "Visual masih beta",
+      "body": "Efek digambar ulang di setiap frame dan di perangkat yang lemah bisa menguras baterai atau tersendat.",
+      "modes": {
+        "full": {
+          "name": "Semua efek",
+          "hint": "Semua aktif, termasuk tepi lirik yang diburamkan"
+        },
+        "balanced": {
+          "name": "Seimbang",
+          "hint": "Latar bergerak, tanpa blur lirik"
+        },
+        "lite": {
+          "name": "Ringan",
+          "hint": "Sampul diam, lirik polos"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",

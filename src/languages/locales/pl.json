@@ -406,7 +406,26 @@
     "preset_nightcore": "1.35x Nightcore",
     "reverb": "Pogłos",
     "reverb_hint": "Przestrzeń i głębia brzmienia",
-    "reverb_amount": "Pogłos"
+    "reverb_amount": "Pogłos",
+    "beta_visuals": {
+      "label": "Uwaga",
+      "title": "Wizualizacje w becie",
+      "body": "Efekty są rysowane w każdej klatce i na słabszych urządzeniach mogą rozładowywać baterię lub przycinać.",
+      "modes": {
+        "full": {
+          "name": "Wszystkie efekty",
+          "hint": "Wszystko włączone, z rozmytymi krawędziami tekstu"
+        },
+        "balanced": {
+          "name": "Zrównoważony",
+          "hint": "Ruchome tła, bez rozmycia tekstu"
+        },
+        "lite": {
+          "name": "Lekki",
+          "hint": "Nieruchoma okładka, zwykły tekst"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlista",

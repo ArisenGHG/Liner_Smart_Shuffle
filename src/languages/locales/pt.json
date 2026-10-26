@@ -413,7 +413,26 @@
     "preset_nightcore": "1.35x Nightcore",
     "reverb": "Reverb",
     "reverb_hint": "Espaço atmosférico e profundidade ambiente",
-    "reverb_amount": "Reverb"
+    "reverb_amount": "Reverb",
+    "beta_visuals": {
+      "label": "Aviso",
+      "title": "Visuais em beta",
+      "body": "Os efeitos são redesenhados a cada quadro e em aparelhos mais fracos podem gastar bateria ou travar.",
+      "modes": {
+        "full": {
+          "name": "Todos os efeitos",
+          "hint": "Tudo ligado, com bordas da letra desfocadas"
+        },
+        "balanced": {
+          "name": "Equilibrado",
+          "hint": "Fundos animados, sem desfoque na letra"
+        },
+        "lite": {
+          "name": "Leve",
+          "hint": "Capa parada, letra simples"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",

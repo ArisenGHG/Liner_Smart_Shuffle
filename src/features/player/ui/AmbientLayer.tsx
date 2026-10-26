@@ -2,10 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cachedAmbientScript, loadAmbientScript } from "@/shared/media/ambient";
 import { cn } from "@/shared/lib";
 import { AMBIENT_FADE_MS } from "../hooks/ambientFeed";
+import { useAmbientMask } from "../hooks/useAmbientMask";
 import {
   useAmbientWorker,
   type AmbientOptions,
 } from "../hooks/useAmbientWorker";
+import {
+  useAmbientEnabled,
+  useVisualModeStore,
+} from "../store/visualModeStore";
 import { usePlayerStore } from "../store/playerStore";
 
 interface AmbientLayerProps {
@@ -39,6 +44,7 @@ function AmbientCanvas({ script, visible }: AmbientCanvasProps) {
   const [failed, setFailed] = useState(false);
   const [options, setOptions] = useState<AmbientOptions>();
   const fail = useCallback(() => setFailed(true), []);
+  const mask = useAmbientMask(hostRef);
   useAmbientWorker(
     hostRef,
     options?.pixelated ?? false,
@@ -52,11 +58,12 @@ function AmbientCanvas({ script, visible }: AmbientCanvasProps) {
       ref={hostRef}
       aria-hidden
       style={{
+        ...mask,
         transitionDuration: `${AMBIENT_FADE_MS}ms`,
-        filter: `blur(${options?.blur ?? 0}px)`,
+        filter: options?.blur ? `blur(${options.blur}px)` : undefined,
       }}
       className={cn(
-        "pointer-events-none absolute inset-0 transition-opacity ease-out [mask-image:linear-gradient(to_right,black_30%,rgba(0,0,0,0.12)_62%)]",
+        "pointer-events-none absolute inset-0 transition-opacity ease-out",
         visible && options ? "opacity-80" : "opacity-0",
       )}
     />
@@ -89,11 +96,18 @@ function useAmbientScript(trackId: string | undefined): string | null {
 export default function AmbientLayer({ trackId }: AmbientLayerProps) {
   const script = useAmbientScript(trackId);
   const playing = usePlayerStore((s) => s.status === "playing");
+  const enabled = useAmbientEnabled();
+  const setAmbientAvailable = useVisualModeStore((s) => s.setAmbientAvailable);
   const wanted = useMemo<AmbientScene | null>(
-    () => (script ? { key: sceneKey(script), script } : null),
-    [script],
+    () => (enabled && script ? { key: sceneKey(script), script } : null),
+    [enabled, script],
   );
   const [shown, setShown] = useState<AmbientScene | null>(wanted);
+
+  useEffect(() => {
+    setAmbientAvailable(Boolean(script));
+    return () => setAmbientAvailable(false);
+  }, [script, setAmbientAvailable]);
 
   useEffect(() => {
     if (wanted?.key === shown?.key) return;

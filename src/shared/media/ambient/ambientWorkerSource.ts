@@ -12,10 +12,19 @@ const fail = (error) => {
   self.postMessage({ type: "error", message: String(error && error.message ? error.message : error) });
 };
 
+let pending = 0;
+
 const tick = (now) => {
   if (!running) return;
-  const dt = last ? Math.min((now - last) / 1000, 0.1) : 0;
+  pending += last ? (now - last) / 1000 : 0;
   last = now;
+  const fps = Math.min(60, Math.max(1, Number(effect.fps) || 60));
+  if (pending > 0 && pending < 1 / fps - 0.004) {
+    self.requestAnimationFrame(tick);
+    return;
+  }
+  const dt = Math.min(pending, 0.1);
+  pending = 0;
   elapsed += dt;
   try {
     effect.frame({ ...state, time: elapsed, dt });
@@ -30,6 +39,7 @@ const start = () => {
   if (running || !effect) return;
   running = true;
   last = 0;
+  pending = 0;
   self.requestAnimationFrame(tick);
 };
 

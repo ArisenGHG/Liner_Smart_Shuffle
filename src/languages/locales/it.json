@@ -402,7 +402,26 @@
     "preset_nightcore": "1.35x Nightcore",
     "reverb": "Riverbero",
     "reverb_hint": "Spazio atmosferico e profondità ambientale",
-    "reverb_amount": "Riverbero"
+    "reverb_amount": "Riverbero",
+    "beta_visuals": {
+      "label": "Attenzione",
+      "title": "Effetti visivi in beta",
+      "body": "Gli effetti vengono ridisegnati a ogni fotogramma e sui dispositivi meno potenti possono consumare batteria o scattare.",
+      "modes": {
+        "full": {
+          "name": "Tutti gli effetti",
+          "hint": "Tutto attivo, bordi del testo sfocati inclusi"
+        },
+        "balanced": {
+          "name": "Bilanciato",
+          "hint": "Sfondi animati, senza sfocatura del testo"
+        },
+        "lite": {
+          "name": "Leggero",
+          "hint": "Copertina fissa, testo semplice"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",
