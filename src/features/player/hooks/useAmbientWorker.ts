@@ -1,13 +1,8 @@
 import { useEffect, type RefObject } from "react";
 import { buildAmbientWorkerSource } from "@/shared/media/ambient";
 import { log } from "@/shared/utils/logger";
-import {
-  isWindowVisible,
-  onWindowVisibilityChange,
-} from "@/shared/utils/windowVisibility";
-import { usePlayerStore } from "../store/playerStore";
+import { playbackState, startAmbientFeed } from "./ambientFeed";
 
-const STATE_INTERVAL_MS = 250;
 const DEFAULT_SCALE = 0.5;
 
 export interface AmbientOptions {
@@ -19,11 +14,6 @@ interface WorkerMessage {
   message?: string;
   pixelated?: boolean;
   scale?: number;
-}
-
-function playbackState() {
-  const { status, positionMs } = usePlayerStore.getState();
-  return { playing: status === "playing", positionMs };
 }
 
 function surfaceSize(canvas: HTMLCanvasElement, scale: number) {
@@ -89,20 +79,13 @@ export function useAmbientWorker(
       },
       [offscreen],
     );
-    if (!isWindowVisible()) worker.postMessage({ type: "pause" });
 
-    const sendState = () =>
-      worker.postMessage({ type: "state", state: playbackState() });
-    const stateTimer = window.setInterval(sendState, STATE_INTERVAL_MS);
-    const stopWatchingVisibility = onWindowVisibilityChange((visible) =>
-      worker.postMessage({ type: visible ? "resume" : "pause" }),
-    );
+    const stopFeed = startAmbientFeed(worker);
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(canvas);
 
     return () => {
-      window.clearInterval(stateTimer);
-      stopWatchingVisibility();
+      stopFeed();
       resizeObserver.disconnect();
       worker.terminate();
       URL.revokeObjectURL(source);
