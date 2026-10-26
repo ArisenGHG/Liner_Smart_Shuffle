@@ -240,7 +240,28 @@
     "no_albums_desc": "Save albums from search or recommendations to find them quickly",
     "no_artists_title": "No saved artists",
     "no_artists_desc": "Save artists to quickly access their discography",
-    "search_music": "Search music"
+    "search_music": "Search music",
+    "local": {
+      "title": "On this device",
+      "subtitle": "Your own audio files. They stay on this computer and never go to YouTube or Liner servers.",
+      "add_files": "Add files",
+      "importing": "Adding…",
+      "empty_title": "No local files yet",
+      "empty_subtitle": "Add MP3, FLAC, M4A, OGG, OPUS or WAV files, or drop them anywhere in the window.",
+      "drop_title": "Drop to add to Liner",
+      "drop_subtitle": "Files are copied to this device only",
+      "drop_count_one": "{count} file",
+      "drop_count_other": "{count} files",
+      "imported_one": "Added {count} song",
+      "imported_other": "Added {count} songs",
+      "skipped_duplicates_one": "{count} was already added",
+      "skipped_duplicates_other": "{count} were already added",
+      "already_added": "These files are already added",
+      "import_failed_one": "Couldn't add {count} file",
+      "import_failed_other": "Couldn't add {count} files",
+      "unsupported": "These files aren't supported audio",
+      "remove": "Remove from device"
+    }
   },
   "login": {
     "welcome_back": "Welcome back",

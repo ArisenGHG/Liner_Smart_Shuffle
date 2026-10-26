@@ -21,6 +21,7 @@ import { useModalStore } from "../store/modalStore";
 import { useImportStore } from "../store/importStore";
 import { usePageBackdrop } from "@/shared/lib";
 import ImportingPlaylistCard from "./ImportingPlaylistCard";
+import { LocalFilesCard } from "../local";
 
 const PAGE_SIZE = 24;
 
@@ -454,6 +455,10 @@ export default function LibraryPage() {
                             onClick={() =>
                               navigate("/library/playlist?id=likes")
                             }
+                          />,
+                          <LocalFilesCard
+                            key="local-files-card"
+                            viewMode={viewMode}
                           />,
                           ...(isImporting && importJob
                             ? [

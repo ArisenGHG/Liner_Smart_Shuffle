@@ -11,6 +11,7 @@ import {
   toSoundCloudTrackId,
 } from "@/shared/media/soundcloud";
 import { resolveLinerStream } from "@/shared/media/liner/linerPlayback";
+import { isLocalTrackId, localTrackAudioUrl } from "@/shared/media/local";
 import { isAbortError } from "@/shared/utils/abort";
 import { log } from "@/shared/utils/logger";
 import {
@@ -127,6 +128,14 @@ export async function resolvePlaybackStream(
   options: ResolveStreamOptions = {},
 ): Promise<PlaybackStream> {
   const progressive = options.progressive ?? false;
+  if (isLocalTrackId(track.id))
+    return {
+      url: localTrackAudioUrl(track.id),
+      expiresAtMs: null,
+      mimeType: "",
+      codec: "local",
+      bitrate: 0,
+    };
   if (toSoundCloudTrackId(track.id))
     return resolveSoundCloud(track, progressive, signal);
   const videoId = toVideoId(track.id);

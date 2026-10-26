@@ -834,7 +834,6 @@ function NotificationCard({
         transformOrigin: "bottom center",
         fontFamily: "var(--font-inter), sans-serif",
         maxWidth: "min(520px, calc(100vw - 32px))",
-        minWidth: "180px",
         minHeight: "38px",
         width: index > 0 && activeCardWidth ? `${activeCardWidth}px` : undefined,
         height: index > 0 && activeCardHeight ? `${activeCardHeight}px` : undefined,

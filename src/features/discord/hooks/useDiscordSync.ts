@@ -5,6 +5,7 @@ import { api, mediaUrl, toMaxQualityAvatarUrl } from "@/shared/api";
 import { getAuthSession } from "@/shared/api/auth-session";
 import type { DiscordRpcStatePayload } from "../contracts";
 import { useDiscordSettingsStore } from "../store/discordSettingsStore";
+import { isLocalTrackId } from "@/shared/media/local";
 
 const artistAvatarCache = new Map<string, string | null>();
 const pendingArtistAvatars = new Map<string, Promise<string | null>>();
@@ -157,7 +158,7 @@ export function useDiscordSync() {
       status: player.status,
       track: currentTrack
         ? {
-            id: currentTrack.id,
+            id: isLocalTrackId(currentTrack.id) ? "" : currentTrack.id,
             title: currentTrack.title,
             artist: artistName,
             artistId: primaryArtistId,

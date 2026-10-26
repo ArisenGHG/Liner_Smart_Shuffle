@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 import type {
   AuthRefreshResult,
   StoredAuthSession,
@@ -7,6 +7,7 @@ import { startPoTokenWorker } from "./youtube/potoken-preload";
 import type { TvSession as YoutubeTvSession } from "./youtube/tv-session";
 import type { SolveResult as YoutubeSolveResult } from "./youtube/n-solver";
 import type { MainNetResult } from "./netdiag";
+import type { LocalImportResult, LocalTrackRecord } from "./local-tracks/types";
 
 export interface DiscordStatus {
   connected: boolean;
@@ -192,6 +193,11 @@ export interface LinerElectronApi {
     playerId: string,
     values: string[],
   ) => Promise<YoutubeSolveResult>;
+  localTracksList: () => Promise<LocalTrackRecord[]>;
+  localTracksImport: (paths: string[]) => Promise<LocalImportResult>;
+  localTracksPick: () => Promise<LocalImportResult | null>;
+  localTracksRemove: (ids: string[]) => Promise<void>;
+  pathForFile: (file: File) => string;
 }
 
 const isHyprland = Boolean(
@@ -439,6 +445,12 @@ const api: LinerElectronApi = {
   youtubeTvSession: () => ipcRenderer.invoke("youtube:tv-session"),
   youtubeSolveN: (playerId, values) =>
     ipcRenderer.invoke("youtube:solve-n", { playerId, values }),
+  localTracksList: () => ipcRenderer.invoke("local-tracks:list"),
+  localTracksImport: (paths) =>
+    ipcRenderer.invoke("local-tracks:import", paths),
+  localTracksPick: () => ipcRenderer.invoke("local-tracks:pick"),
+  localTracksRemove: (ids) => ipcRenderer.invoke("local-tracks:remove", ids),
+  pathForFile: (file) => webUtils.getPathForFile(file),
 };
 
 if (location.hostname === "www.youtube.com") {

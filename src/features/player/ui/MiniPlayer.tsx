@@ -44,6 +44,7 @@ import { useTheme } from "next-themes";
 import { useCoverReady, CoverImage } from "@/features/covers";
 import { useHasPageBackdrop } from "@/features/settings/store/customizationStore";
 import { ArtistLink } from "@/features/artist";
+import { isLocalTrackId } from "@/shared/media/local";
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
@@ -344,6 +345,7 @@ function MiniPlayer({
 
   const currentTrack = player.currentTrack;
   const volumeLevel = toVolumeLevel(player.volume);
+  const isLocal = isLocalTrackId(currentTrack?.id);
   const isLiked = useIsTrackLiked(currentTrack?.id);
   const eqActive = isEqActive(player.isEqEnabled, player.eqGains);
   const likeMutation = useLikeTrack();
@@ -842,24 +844,27 @@ function MiniPlayer({
                   name={trackArtists}
                   artistId={player.currentTrack?.artistId}
                   artistList={player.currentTrack?.artistList}
+                  plain={isLocal}
                   className="text-text-tertiary pointer-events-auto"
                 />
               </p>
             </div>
-            <button
-              type="button"
-              aria-label={isLiked ? "Unlike" : "Like"}
-              className={`${iconButtonClass} shrink-0 transition-colors duration-150 pointer-events-auto prevent-seek ${
-                isLiked
-                  ? "text-accent-primary"
-                  : "text-text-secondary hover:text-text-primary"
-              }`}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={handleLikeToggle}
-              style={{ cursor: "pointer" }}
-            >
-              {isLiked ? <HeartFill size={20} /> : <HeartLine size={20} />}
-            </button>
+            {!isLocal && (
+              <button
+                type="button"
+                aria-label={isLiked ? "Unlike" : "Like"}
+                className={`${iconButtonClass} shrink-0 transition-colors duration-150 pointer-events-auto prevent-seek ${
+                  isLiked
+                    ? "text-accent-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleLikeToggle}
+                style={{ cursor: "pointer" }}
+              >
+                {isLiked ? <HeartFill size={20} /> : <HeartLine size={20} />}
+              </button>
+            )}
           </div>
 
           <div

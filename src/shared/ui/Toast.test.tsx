@@ -265,7 +265,6 @@ describe("Toast Batches & Stacking", () => {
 
     const card = container.querySelector(".grid > div") as HTMLElement;
     expect(card.className).toContain("min-h-[38px]");
-    expect(card.style.minWidth).toContain("180px");
     expect(card.style.minHeight).toBe("38px");
   });
 

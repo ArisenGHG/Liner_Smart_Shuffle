@@ -21,6 +21,16 @@ import {
 import { useTranslation } from "@/languages";
 import { showToast } from "@/shared/ui";
 import { buildShareUrl } from "@/shared/utils/share";
+import { isLocalTrackId } from "@/shared/media/local";
+
+const CLOUD_ONLY_ITEMS = new Set([
+  "start-radio",
+  "like-track",
+  "unlike-track",
+  "add-to-playlist",
+  "remove-from-playlist",
+  "share",
+]);
 
 export interface SongMenuContext {
   id?: string;
@@ -36,6 +46,7 @@ export interface SongMenuContext {
   playlistTitle?: string;
   /** play queue rows: adds "Remove from queue" (the queue animates the row out) */
   onRemoveFromQueue?: () => void;
+  onRemoveFromDevice?: () => void;
 }
 
 export function useSongMenuItems(ctx: SongMenuContext): DropdownMenuItem[] {
@@ -53,6 +64,7 @@ export function useSongMenuItems(ctx: SongMenuContext): DropdownMenuItem[] {
     playlistItemId,
     playlistTitle,
     onRemoveFromQueue,
+    onRemoveFromDevice,
   } = ctx;
 
   const { data: playlistsData } = usePlaylistsList();
@@ -74,7 +86,8 @@ export function useSongMenuItems(ctx: SongMenuContext): DropdownMenuItem[] {
   const handleShare = useCallback(() => {
     if (!id) return;
     if (typeof navigator !== "undefined" && navigator.clipboard) {
-      const type = (searchType as "track" | "album" | "artist" | "playlist") || "track";
+      const type =
+        (searchType as "track" | "album" | "artist" | "playlist") || "track";
       void navigator.clipboard.writeText(buildShareUrl(type, id));
       showToast(t("common.link_copied"), "checkmark", {
         description: artists ? `${title} — ${artists}` : title,
@@ -324,5 +337,18 @@ export function useSongMenuItems(ctx: SongMenuContext): DropdownMenuItem[] {
     t,
   ]);
 
-  return buildMenu();
+  const items = buildMenu();
+  if (!isLocalTrackId(id)) return items;
+  const deviceItems = items.filter((item) => !CLOUD_ONLY_ITEMS.has(item.id));
+  if (!onRemoveFromDevice) return deviceItems;
+  return [
+    ...deviceItems,
+    {
+      id: "remove-from-device",
+      label: t("library.local.remove"),
+      icon: <LuTrash2 size={15} />,
+      danger: true,
+      onClick: onRemoveFromDevice,
+    },
+  ];
 }

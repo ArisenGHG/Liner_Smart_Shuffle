@@ -54,6 +54,7 @@ import {
   RemoveFromLibraryModal,
   ImportLikesModal,
   ImportReviewModal,
+  LocalDropZone,
   CreatePlaylistModal,
   useModalStore,
 } from "@/features/library";
@@ -1063,6 +1064,7 @@ export default function AppFrame({ children }: AppFrameProps) {
       <ImportLikesModal />
       <CreatePlaylistModal />
       <ImportReviewModal />
+      <LocalDropZone />
       <SettingsModal />
       <UpdateModal />
       <YoutubeSignInNotice />

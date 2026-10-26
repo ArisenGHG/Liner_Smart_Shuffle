@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "@/features/home/ui/HomePage";
 import LibraryPage from "@/features/library/ui/LibraryPage";
 import PlaylistPage from "@/features/library/ui/PlaylistPage";
+import { LocalTracksPage } from "@/features/library";
 import ArtistPage from "@/features/artist/ui/ArtistPage";
 import CollectionPage from "@/features/collection/ui/CollectionPage";
 import LoginPage from "@/features/auth/ui/LoginPage";
@@ -13,6 +14,7 @@ export function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/library" element={<LibraryPage />} />
       <Route path="/library/playlist" element={<PlaylistPage />} />
+      <Route path="/library/local" element={<LocalTracksPage />} />
       <Route path="/artist" element={<ArtistPage />} />
       <Route path="/collection" element={<CollectionPage />} />
       <Route path="/login" element={<LoginPage />} />

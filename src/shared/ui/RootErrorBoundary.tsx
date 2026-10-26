@@ -56,7 +56,6 @@ export class RootErrorBoundary extends Component<
 
     this.props.onError?.(error, errorInfo);
 
-    // Automatically send crash report with component stack to Monitor
     telemetry.reportError(error, {
       componentStack: errorInfo.componentStack,
       source: "React.RootErrorBoundary",

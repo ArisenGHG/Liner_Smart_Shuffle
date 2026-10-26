@@ -73,6 +73,8 @@ import {
 } from "./snap-native.js";
 import { DiscordRpcManager } from "./discord.js";
 import { PoTokenService } from "./youtube/potoken.js";
+import { setupLocalTracks } from "./local-tracks/ipc.js";
+import { registerLocalTrackScheme } from "./local-tracks/protocol.js";
 import {
   YOUTUBE_REQUEST_URLS,
   youtubeOriginFor,
@@ -97,6 +99,7 @@ app.commandLine.appendSwitch("disable-http2");
 if (detectCompositor() !== "none") {
   app.commandLine.appendSwitch("enable-features", "GlobalShortcutsPortal");
 }
+registerLocalTrackScheme();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -366,12 +369,14 @@ function createWindow() {
   mainWindow.webContents.on("console-message", (_event, level, message) => {
     // clean devtools format directives for terminal readability
     const cleanMsg = message.replace(/%c/g, "").trim();
-    try {
-      fs.appendFileSync(
-        path.join(process.cwd(), "renderer.log"),
-        `[${level}] ${cleanMsg}\n`,
-      );
-    } catch {}
+    if (!app.isPackaged) {
+      try {
+        fs.appendFileSync(
+          path.join(process.cwd(), "renderer.log"),
+          `[${level}] ${cleanMsg}\n`,
+        );
+      } catch {}
+    }
     if (level >= 3) {
       console.error(`\x1b[41;37m renderer error \x1b[0m ${cleanMsg}`);
     } else if (level === 2) {
@@ -517,6 +522,7 @@ if (!gotTheLock) {
     } else {
       app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME);
     }
+    setupLocalTracks();
     touchBarManager = new TouchBarManager(
       path.join(__dirname, "preload.cjs"),
       RENDERER_DIST,

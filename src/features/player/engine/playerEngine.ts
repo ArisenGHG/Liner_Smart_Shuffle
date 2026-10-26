@@ -34,6 +34,7 @@ import { debouncedStorage } from "@/shared/utils/storage";
 import { showToast } from "@/shared/ui";
 import { createTranslatorSync, getStoredLocale } from "@/languages";
 import type { Track } from "@/shared/types";
+import { isLocalTrackId } from "@/shared/media/local";
 import { STREAMS_REFUSED_MESSAGE } from "@/shared/youtube";
 
 const MAX_CONSECUTIVE_AUTO_SKIPS = 3;
@@ -227,17 +228,18 @@ class PlaybackTelemetryTracker {
     const completionRate = Math.min(1.0, Math.max(0.0, rawRate));
     const isSkipped = !this.completed && this.playedDurationMs < 30000;
 
-    if (this.playedDurationMs >= 3000 || this.completed) {
+    if (
+      (this.playedDurationMs >= 3000 || this.completed) &&
+      !isLocalTrackId(this.activeTrackId)
+    ) {
       const snap = this.activeTrack;
       const artistsList = snap?.artistList?.length
         ? snap.artistList.map((a) => ({ id: a.id || "unknown", name: a.name }))
         : snap?.artists
-          ? snap.artists
-              .split(",")
-              .map((name) => ({
-                id: snap?.artistId || "unknown",
-                name: name.trim(),
-              }))
+          ? snap.artists.split(",").map((name) => ({
+              id: snap?.artistId || "unknown",
+              name: name.trim(),
+            }))
           : [{ id: "unknown", name: "Unknown Artist" }];
 
       reported = this.sendEvent({
@@ -282,13 +284,16 @@ class PlaybackTelemetryTracker {
   }
 
   private sendEvent(payload: RecordPlaybackEventRequest): Promise<void> {
-    return api.recordPlaybackEvent(payload).then(() => undefined, (err) => {
-      log(
-        "yellow",
-        "telemetry",
-        `playback event report failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    });
+    return api.recordPlaybackEvent(payload).then(
+      () => undefined,
+      (err) => {
+        log(
+          "yellow",
+          "telemetry",
+          `playback event report failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      },
+    );
   }
 }
 
@@ -569,6 +574,7 @@ class PlayerEngine {
   }
 
   public async startRadioStation(track: Track): Promise<void> {
+    if (isLocalTrackId(track.id)) return;
     const store = usePlayerStore.getState();
     this.sessionId += 1;
     const mySession = this.sessionId;
@@ -1053,7 +1059,12 @@ class PlayerEngine {
   // returns the undo, or null when nothing was removed
   public removeFromQueue(index: number): (() => void) | null {
     const store = usePlayerStore.getState();
-    if (index < 0 || index >= store.queue.length || index === store.currentIndex) return null;
+    if (
+      index < 0 ||
+      index >= store.queue.length ||
+      index === store.currentIndex
+    )
+      return null;
 
     const track = store.queue[index];
     const queue = store.queue.filter((_, i) => i !== index);
@@ -1064,7 +1075,8 @@ class PlayerEngine {
     this.preloadNextTrack(usePlayerStore.getState());
     // undo only applies to the queue it was made on, not to a queue started or edited since
     return () => {
-      if (usePlayerStore.getState().queue === queue) this.insertIntoQueue(index, track);
+      if (usePlayerStore.getState().queue === queue)
+        this.insertIntoQueue(index, track);
     };
   }
 
@@ -1129,7 +1141,10 @@ class PlayerEngine {
           refusedToast,
         );
       else
-        showToast(translate("player.playback_stopped_too_many_errors"), "error");
+        showToast(
+          translate("player.playback_stopped_too_many_errors"),
+          "error",
+        );
       this.consecutiveAutoSkips = 0;
       this.stopPlayback();
       store.setStatus("idle");
@@ -1146,7 +1161,11 @@ class PlayerEngine {
       `"${track.title}" failed (${info.message}) — skipping to next`,
     );
     if (refused)
-      showToast(translate("player.youtube_refused_title"), "error", refusedToast);
+      showToast(
+        translate("player.youtube_refused_title"),
+        "error",
+        refusedToast,
+      );
     else
       showToast(translate("player.track_unavailable_title"), "error", {
         description: track.artists
@@ -1219,9 +1238,12 @@ class PlayerEngine {
     // radio always continues; plain lists only when "autoplay similar" is on
     const radio = isRadioContext(currentState.playbackContext);
     if (!radio && !currentState.autoplaySimilar) return;
+    if (isLocalTrackId(seedTrackId)) return;
     const startContext = currentState.playbackContext;
 
-    const historyIds = currentState.queue.map((track) => track.id);
+    const historyIds = currentState.queue
+      .map((track) => track.id)
+      .filter((id) => !isLocalTrackId(id));
     // keep paginating the same wave instance across queue generations
     if (!this.radioWaveId) this.radioWaveId = newRadioWaveId();
     const waveId = this.radioWaveId;
@@ -1323,7 +1345,7 @@ class PlayerEngine {
     trackId: string,
     hint?: LyricsHint,
   ): Promise<void> {
-    if (!trackId) return;
+    if (!trackId || isLocalTrackId(trackId)) return;
 
     if (lyricsCache.has(trackId)) return;
     if (this.inFlightLyricsPrefetches.has(trackId)) {
@@ -1416,6 +1438,12 @@ class PlayerEngine {
       this.currentLyricsTrackId === trackId &&
       lyricsStore.currentLyricsTrackId === trackId
     ) {
+      return;
+    }
+    if (isLocalTrackId(trackId)) {
+      this.currentLyricsTrackId = trackId;
+      this.lyricsAbort?.abort();
+      lyricsStore.reset();
       return;
     }
 

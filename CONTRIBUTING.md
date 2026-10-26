@@ -67,6 +67,13 @@ signer/       Rust source for the request signer
 
 Match the style of the file you are editing. Do not add a new pattern for one call site.
 
+More guides in `docs/`:
+
+- [DESIGN.md](./docs/DESIGN.md): tokens, glass surfaces, motion and the shared building blocks. Follow it for anything visual.
+- [STORAGE.md](./docs/STORAGE.md): where data lives on the device and what "Clear cache" removes.
+- [PRIVACY.md](./docs/PRIVACY.md): what the app sends off the device. Update it when you change that.
+- [I18N.md](./docs/I18N.md): adding strings, plurals and new languages.
+
 ## Tests
 
 If you change a function that already has a test, update that test. If you add logic in a store, a parser, or the Electron main process, add a test next to the ones already in that area. A copy change or a layout tweak does not need a test.
