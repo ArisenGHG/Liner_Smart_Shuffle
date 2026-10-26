@@ -71,10 +71,10 @@ export function BetaVisualsWarning({ docked }: BetaVisualsWarningProps) {
         {open && (
           <motion.div
             role="dialog"
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.14, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
               "absolute right-0 top-full z-50 mt-[6px] flex w-[268px] origin-top-right flex-col p-[11px]",
               "rounded-[16px] bg-bg-elevated/55 shadow-[0_14px_48px_rgba(0,0,0,0.35)]",
