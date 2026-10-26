@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "@/languages";
 import { cn } from "@/shared/lib";
-import { useWindowAnimationStore } from "@/shared/ui";
+import { ISLAND_SURFACE, useWindowAnimationStore } from "@/shared/ui";
 import { useWindowState } from "../hooks/useWindowState";
 import { CloseIcon, MaximizeIcon, MinimizeIcon } from "./WindowControlIcons";
 
@@ -151,7 +151,7 @@ export default function WindowControls({
       className={cn(
         "flex items-center gap-[2px] select-none pointer-events-auto",
         isFullscreen
-          ? "h-[32px] px-[3px] rounded-lg bg-black/50 backdrop-blur-xl"
+          ? cn(ISLAND_SURFACE, "h-[32px] px-[3px]")
           : "h-[46px] px-[6px] rounded-xl apple-glass-pill",
       )}
     >

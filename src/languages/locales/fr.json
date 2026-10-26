@@ -499,7 +499,28 @@
     "eq_preset_smooth": "Doux",
     "eq_preset_smooth_hint": "Adoucit les aigus agressifs pour une écoute prolongée",
     "eq_preset_rnb": "R&B",
-    "eq_preset_rnb_hint": "Voix soyeuses sur des basses rondes et chaleureuses"
+    "eq_preset_rnb_hint": "Voix soyeuses sur des basses rondes et chaleureuses",
+    "beta_visuals": {
+      "label": "Attention",
+      "ambient_title": "Ambient est en bêta",
+      "ambient_body": "Ce titre a son propre fond animé. Il est encore en bêta et peut solliciter les appareils modestes : choisis un mode plus léger si le lecteur saccade.",
+      "settings_title": "Qualité visuelle",
+      "settings_body": "Choisis à quel point le lecteur plein écran s’anime. Les modes légers économisent la batterie et sont plus fluides sur les appareils modestes.",
+      "modes": {
+        "full": {
+          "name": "Tous les effets",
+          "hint": "Tout activé, bords des paroles floutés compris"
+        },
+        "balanced": {
+          "name": "Équilibré",
+          "hint": "Fonds animés, sans flou sur les paroles"
+        },
+        "lite": {
+          "name": "Léger",
+          "hint": "Pochette fixe, paroles simples"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Playlist",

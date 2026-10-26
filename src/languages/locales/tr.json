@@ -402,7 +402,28 @@
     "preset_nightcore": "1.35x Nightcore",
     "reverb": "Yankı",
     "reverb_hint": "Atmosferik alan ve ortam derinliği",
-    "reverb_amount": "Yankı"
+    "reverb_amount": "Yankı",
+    "beta_visuals": {
+      "label": "Uyarı",
+      "ambient_title": "Ambient beta aşamasında",
+      "ambient_body": "Bu parçanın kendine ait animasyonlu bir arka planı var. Hâlâ beta aşamasında ve zayıf cihazları yorabilir; oynatıcı takılırsa daha hafif bir mod seç.",
+      "settings_title": "Görsel kalite",
+      "settings_body": "Tam ekran oynatıcının ne kadar hareketli olacağını seç. Hafif modlar pil tasarrufu sağlar ve zayıf cihazlarda daha akıcı çalışır.",
+      "modes": {
+        "full": {
+          "name": "Tüm efektler",
+          "hint": "Her şey açık, bulanık söz kenarları dahil"
+        },
+        "balanced": {
+          "name": "Dengeli",
+          "hint": "Hareketli arka planlar, söz bulanıklığı yok"
+        },
+        "lite": {
+          "name": "Hafif",
+          "hint": "Sabit kapak, sade sözler"
+        }
+      }
+    }
   },
   "playlist": {
     "playlist": "Çalma listesi",

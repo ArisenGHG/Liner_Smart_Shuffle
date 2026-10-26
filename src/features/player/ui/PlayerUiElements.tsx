@@ -3,7 +3,7 @@ import { MusicNote } from "@solar-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCoverReady, CoverImage } from "@/features/covers";
 import { cn } from "@/shared/lib";
-import { usePlayerState } from "../hooks/usePlayerState";
+import { usePlayerStore } from "../store/playerStore";
 import { VolumePicker } from "./VolumePicker";
 import { FullscreenTrackInfo } from "./FullscreenTrackInfo";
 import { FullscreenTimeline } from "./FullscreenTimeline";
@@ -39,7 +39,7 @@ interface PlayerUiElementsProps {
 }
 
 export function PlayerUiElements({ onClose }: PlayerUiElementsProps) {
-  const track = usePlayerState().currentTrack;
+  const track = usePlayerStore((s) => s.currentTrack);
   const coverUrl = track?.coverUrl || "";
   const isCoverLoaded = useCoverReady(coverUrl);
   const scale = useFullscreenColumnScale();
@@ -57,10 +57,7 @@ export function PlayerUiElements({ onClose }: PlayerUiElementsProps) {
     >
       <div className="relative">
         <div
-          aria-hidden
-          className="pointer-events-none absolute -inset-[22%] backdrop-blur-xl [mask-image:radial-gradient(closest-side,black_55%,transparent)]"
-        />
-        <div
+          data-ambient-hole
           className={cn(
             "relative aspect-square w-full shrink-0 overflow-hidden rounded-xl bg-black/20",
             coverUrl && !isCoverLoaded && "animate-pulse",
