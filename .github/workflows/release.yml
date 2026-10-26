@@ -5,7 +5,6 @@ on:
     tags:
       - "v*"
       - "[0-9]+.[0-9]+.[0-9]+*"
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -137,6 +136,7 @@ jobs:
     name: Publish Release
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
+    environment: release
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all artifacts
