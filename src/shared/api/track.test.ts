@@ -2,6 +2,19 @@ import React from "react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { toClientTrack } from "./track";
 
+beforeEach(() => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
 describe("toClientTrack", () => {
   beforeEach(() => {
     vi.stubGlobal(
