@@ -835,7 +835,6 @@ function NotificationCard({
         gridArea: "1 / 1",
         zIndex,
         transformOrigin: "bottom center",
-        fontFamily: "var(--font-inter), sans-serif",
         maxWidth: "min(520px, calc(100vw - 32px))",
         minHeight: "38px",
         width:

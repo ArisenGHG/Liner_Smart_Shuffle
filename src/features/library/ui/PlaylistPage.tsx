@@ -611,7 +611,6 @@ function LibraryPlaylistContent() {
                         type="button"
                         onClick={() => setIsEditingDescription(true)}
                         className="cursor-pointer border-0 bg-transparent p-0 text-left text-[13px] font-[400] text-text-tertiary transition-colors hover:text-text-primary"
-                        style={{ fontFamily: "var(--font-inter), sans-serif" }}
                       >
                         {t("common.add_description")}
                       </button>
@@ -791,16 +790,10 @@ function LibraryPlaylistContent() {
                   <div className="flex min-h-[50vh] flex-col items-center justify-center gap-[12px] text-center">
                     <PlaylistFill size={40} className="text-border-alpha-33" />
                     <div className="flex flex-col gap-[4px]">
-                      <p
-                        className="m-0 text-[15px] font-[500] text-text-primary"
-                        style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                      >
+                      <p className="m-0 text-[15px] font-[500] text-text-primary">
                         {t("playlist.empty_title")}
                       </p>
-                      <p
-                        className="m-0 text-[13px] text-text-tertiary"
-                        style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                      >
+                      <p className="m-0 text-[13px] text-text-tertiary">
                         {t("playlist.empty_subtitle")}
                       </p>
                     </div>

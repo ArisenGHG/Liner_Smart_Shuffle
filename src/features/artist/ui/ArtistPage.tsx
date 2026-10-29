@@ -228,7 +228,6 @@ function ArtistContent() {
 
   const iconButtonClass = `${HERO_BUTTON_CLASS} ${HERO_GLASS_BUTTON_CLASS} !w-[52px] !p-0 text-text-primary`;
   const sectionTitleClass = "text-[22px] font-[500] text-text-primary m-0";
-  const interFont = { fontFamily: "var(--font-inter), sans-serif" };
 
   const renderTrack = (track: Track) =>
     data && (
@@ -369,7 +368,7 @@ function ArtistContent() {
                 <div className="flex flex-col gap-[40px]">
                   <section id="artist-tracks-section">
                     <div className="flex items-center justify-between mb-[16px]">
-                      <h2 className={sectionTitleClass} style={interFont}>
+                      <h2 className={sectionTitleClass}>
                         {t("artist.popular_songs")}
                       </h2>
                       {data.tracks.length > 5 && (
@@ -377,7 +376,6 @@ function ArtistContent() {
                           type="button"
                           onClick={() => setShowAllTracks((prev) => !prev)}
                           className="text-[13px] font-[500] text-text-secondary hover:text-text-primary transition-colors cursor-pointer bg-transparent border-0 p-0"
-                          style={interFont}
                         >
                           {showAllTracks
                             ? t("artist.show_less")
@@ -416,10 +414,7 @@ function ArtistContent() {
 
                   {data.albums.length > 0 && (
                     <section>
-                      <h2
-                        className={`${sectionTitleClass} mb-[16px]`}
-                        style={interFont}
-                      >
+                      <h2 className={`${sectionTitleClass} mb-[16px]`}>
                         {t("artist.albums")}
                       </h2>
                       <ScrollableRow
@@ -444,10 +439,7 @@ function ArtistContent() {
 
                   {data.singles.length > 0 && (
                     <section>
-                      <h2
-                        className={`${sectionTitleClass} mb-[16px]`}
-                        style={interFont}
-                      >
+                      <h2 className={`${sectionTitleClass} mb-[16px]`}>
                         {t("artist.singles")}
                       </h2>
                       <ScrollableRow
@@ -472,19 +464,13 @@ function ArtistContent() {
 
                   {data.description && (
                     <section>
-                      <h2
-                        className={`${sectionTitleClass} mb-[16px]`}
-                        style={interFont}
-                      >
+                      <h2 className={`${sectionTitleClass} mb-[16px]`}>
                         {t("artist.about_artist")}
                       </h2>
                       <div
                         className={`max-w-[720px] rounded-[14px] p-[16px] flex flex-col gap-[6px] text-text-primary bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-xl`}
                       >
-                        <p
-                          className="m-0 text-[13px] leading-[1.5] text-text-secondary font-[400] select-text line-clamp-3"
-                          style={interFont}
-                        >
+                        <p className="m-0 text-[13px] leading-[1.5] text-text-secondary font-[400] select-text line-clamp-3">
                           {stripMarkdown(data.description)}
                         </p>
                         {data.description.length > 120 && (
@@ -492,7 +478,6 @@ function ArtistContent() {
                             type="button"
                             onClick={() => setIsProfileModalOpen(true)}
                             className="mt-[2px] self-start text-[12px] font-[500] text-text-tertiary hover:text-text-primary cursor-pointer bg-transparent border-0 p-0 transition-colors"
-                            style={interFont}
                           >
                             {t("artist.show_all")}
                           </button>

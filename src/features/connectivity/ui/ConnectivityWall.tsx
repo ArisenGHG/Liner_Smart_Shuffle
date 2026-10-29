@@ -65,20 +65,14 @@ export default function ConnectivityWall() {
             <WifiOffLine size={20} />
           </span>
           <div className="min-w-0">
-            <h1
-              className="m-0 text-[18px] font-[600] tracking-[-0.01em] text-text-primary"
-              style={{ fontFamily: "var(--font-inter), sans-serif" }}
-            >
+            <h1 className="m-0 text-[18px] font-[600] tracking-[-0.01em] text-text-primary">
               {t(
                 serverOutage
                   ? "connectivity.wall_title_server"
                   : "connectivity.wall_title",
               )}
             </h1>
-            <p
-              className="m-0 mt-[2px] text-[13px] text-text-secondary"
-              style={{ fontFamily: "var(--font-inter), sans-serif" }}
-            >
+            <p className="m-0 mt-[2px] text-[13px] text-text-secondary">
               {t(
                 serverOutage
                   ? "connectivity.wall_subtitle_server"
@@ -89,16 +83,10 @@ export default function ConnectivityWall() {
         </div>
 
         <div className="mt-[16px] min-h-0 flex-1 overflow-y-auto">
-          <p
-            className="m-0 text-[13px] font-[600] text-text-primary"
-            style={{ fontFamily: "var(--font-inter), sans-serif" }}
-          >
+          <p className="m-0 text-[13px] font-[600] text-text-primary">
             {t("connectivity.steps_title")}
           </p>
-          <ol
-            className="m-0 mt-[8px] flex flex-col gap-[6px] pl-[20px] text-[13px] leading-[1.5] text-text-secondary"
-            style={{ fontFamily: "var(--font-inter), sans-serif" }}
-          >
+          <ol className="m-0 mt-[8px] flex flex-col gap-[6px] pl-[20px] text-[13px] leading-[1.5] text-text-secondary">
             {steps.map((step) => (
               <li key={step} className="m-0">
                 {step}
@@ -113,7 +101,6 @@ export default function ConnectivityWall() {
               if (checks.length === 0) void runDiagnostics();
             }}
             className="mt-[16px] w-full rounded-md bg-bg-elevated px-[12px] py-[10px] text-left text-[13px] font-[500] text-text-primary transition-colors hover:bg-bg-panel cursor-pointer border-0"
-            style={{ fontFamily: "var(--font-inter), sans-serif" }}
           >
             {checks.length > 0
               ? t("connectivity.check_ok_count", {
@@ -129,10 +116,7 @@ export default function ConnectivityWall() {
           {showChecks ? (
             <div className="mt-[8px] flex flex-col gap-[4px] rounded-md bg-bg-elevated/60 p-[10px]">
               {running && checks.length === 0 ? (
-                <p
-                  className="m-0 px-[2px] py-[4px] text-[12px] text-text-tertiary"
-                  style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                >
+                <p className="m-0 px-[2px] py-[4px] text-[12px] text-text-tertiary">
                   {t("connectivity.retrying")}
                 </p>
               ) : null}
@@ -143,10 +127,7 @@ export default function ConnectivityWall() {
                 >
                   <StatusDot status={check.status} />
                   <div className="min-w-0 flex-1">
-                    <p
-                      className="m-0 text-[12px] font-[500] text-text-primary"
-                      style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                    >
+                    <p className="m-0 text-[12px] font-[500] text-text-primary">
                       {checkLabel(check)}
                       {typeof check.latencyMs === "number" ? (
                         <span className="font-[400] text-text-tertiary">
@@ -159,16 +140,12 @@ export default function ConnectivityWall() {
                       <p
                         className="m-0 truncate text-[11px] text-text-tertiary"
                         title={check.detail}
-                        style={{ fontFamily: "var(--font-inter), sans-serif" }}
                       >
                         {check.detail}
                       </p>
                     ) : null}
                   </div>
-                  <span
-                    className="shrink-0 text-[11px] text-text-tertiary"
-                    style={{ fontFamily: "var(--font-inter), sans-serif" }}
-                  >
+                  <span className="shrink-0 text-[11px] text-text-tertiary">
                     {t(`connectivity.status_${check.status}`)}
                   </span>
                 </div>
@@ -189,7 +166,6 @@ export default function ConnectivityWall() {
           <a
             href={`mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent("Liner connection problem")}`}
             className="inline-flex h-[38px] items-center gap-[6px] px-[8px] text-[13px] font-[500] text-text-secondary hover:text-text-primary transition-colors"
-            style={{ fontFamily: "var(--font-inter), sans-serif" }}
           >
             <MailLine size={15} />
             {t("connectivity.support")}
