@@ -41,6 +41,7 @@ export interface SongCardWithMenuProps {
   /** play queue rows: adds "Remove from queue" to the card menu */
   onRemoveFromQueue?: () => void;
   onRemoveFromDevice?: () => void;
+  titleBadge?: React.ReactNode;
 }
 
 function SongCardWithMenu({
@@ -74,6 +75,7 @@ function SongCardWithMenu({
   trailingAction,
   onRemoveFromQueue,
   onRemoveFromDevice,
+  titleBadge,
 }: SongCardWithMenuProps) {
   const resolvedDurationMs = useMemo(() => {
     if (durationMs !== undefined) return durationMs;
@@ -192,6 +194,7 @@ function SongCardWithMenu({
       showReorderHandle={showReorderHandle}
       onGrabStart={onGrabStart}
       trailingAction={trailingAction}
+      titleBadge={titleBadge}
     />
   );
 }
