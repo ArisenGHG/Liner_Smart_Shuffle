@@ -205,7 +205,7 @@ export function useTouchBarSync() {
             }
             break;
           case "toggleShuffle":
-            playerEngine.setShuffle(!playerEngine.getSnapshot().shuffle);
+            playerEngine.cycleShuffleMode();
             break;
           case "toggleFullscreen": {
             const currentFs =

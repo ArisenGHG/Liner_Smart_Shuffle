@@ -364,6 +364,8 @@
     "clear_queue": "Sırayı temizle",
     "shuffle_on": "Karıştırma açık",
     "shuffle_off": "Karıştırma kapalı",
+    "smart_shuffle_on": "Akıllı karıştırma açık",
+    "smart_shuffle_pick": "Akıllı karıştırma ekledi",
     "save": "Kaydet",
     "home": "Geliştiriliyor",
     "home_subtitle": "Müzik dinlemek için aramayı kullan",

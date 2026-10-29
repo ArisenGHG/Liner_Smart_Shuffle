@@ -12,6 +12,7 @@ const EMPTY_STATE: PlayerState = {
   volume: 1,
   repeat: "off",
   shuffle: false,
+  smartShuffle: false,
   error: null,
   playbackMode: null,
   playbackContext: null,

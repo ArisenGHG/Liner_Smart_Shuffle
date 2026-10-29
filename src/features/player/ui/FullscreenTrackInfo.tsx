@@ -12,6 +12,7 @@ import { ScrollableText } from "@/shared/ui";
 import { usePlayerStore } from "../store/playerStore";
 import { useGlassBlur } from "../store/visualModeStore";
 import { cn } from "@/shared/lib";
+import { SmartShuffleBadge } from "./ShuffleModeIcon";
 import { LikeMorphIcon } from "./LikeMorphIcon";
 
 interface FullscreenTrackInfoProps {
@@ -46,10 +47,13 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
   return (
     <div className="flex w-full items-center gap-[12px]">
       <div className="flex min-w-0 flex-1 flex-col gap-[4px]">
-        <ScrollableText
-          text={track?.title || ""}
-          className="font-montserrat m-0 text-[20px] font-[600] leading-[1.2] tracking-[-0.01em] text-white"
-        />
+        <div className="flex min-w-0 items-center gap-[8px]">
+          <ScrollableText
+            text={track?.title || ""}
+            className="font-montserrat m-0 text-[20px] font-[600] leading-[1.2] tracking-[-0.01em] text-white"
+          />
+          {track?.smartShuffle && <SmartShuffleBadge size={14} />}
+        </div>
         <p className="font-montserrat m-0 flex min-w-0 items-center gap-[6px] text-[14px] font-[500] text-white/70 leading-snug">
           {track?.explicit && (
             <span

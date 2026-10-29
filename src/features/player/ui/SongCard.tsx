@@ -41,6 +41,8 @@ export interface SongCardProps {
   highlight?: string;
   hideArtists?: boolean;
   trailingAction?: React.ReactNode;
+  /** small marker shown right after the title */
+  titleBadge?: React.ReactNode;
 }
 
 function SongCard({
@@ -71,6 +73,7 @@ function SongCard({
   highlight,
   hideArtists = false,
   trailingAction,
+  titleBadge,
 }: SongCardProps) {
   const { t } = useTranslation();
   const [imageLoaded, setImageLoaded] = useState(() => isCoverReady(coverUrl));
@@ -212,6 +215,7 @@ function SongCard({
                 title
               )}
             </h3>
+            {titleBadge}
             {repostedBy && (
               <div
                 className="flex items-center gap-[4px] text-text-tertiary text-[13px]"

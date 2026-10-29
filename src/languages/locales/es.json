@@ -366,6 +366,8 @@
     "clear_queue": "Vaciar cola",
     "shuffle_on": "Aleatorio activado",
     "shuffle_off": "Aleatorio desactivado",
+    "smart_shuffle_on": "Aleatorio inteligente activado",
+    "smart_shuffle_pick": "Añadida por el aleatorio inteligente",
     "save": "Guardar",
     "home": "En desarrollo",
     "home_subtitle": "Usa la búsqueda para escuchar música",

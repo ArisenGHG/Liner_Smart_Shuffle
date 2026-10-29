@@ -397,6 +397,8 @@
     "clear_queue": "Vider la file d'attente",
     "shuffle_on": "Lecture aléatoire activée",
     "shuffle_off": "Lecture aléatoire désactivée",
+    "smart_shuffle_on": "Lecture aléatoire intelligente activée",
+    "smart_shuffle_pick": "Ajouté par la lecture aléatoire intelligente",
     "save": "Enregistrer",
     "home": "En développement",
     "home_subtitle": "Utilisez la recherche pour écouter de la musique",

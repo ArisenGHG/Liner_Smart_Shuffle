@@ -9,6 +9,7 @@ import {
   nextRepeatMode,
 } from "@/features/player";
 import SongCardWithMenu from "@/features/player/ui/SongCardWithMenu";
+import { SmartShuffleBadge } from "@/features/player/ui/ShuffleModeIcon";
 import { useTranslation } from "@/languages";
 import {
   ReorderDropPlaceholder,
@@ -246,6 +247,7 @@ const QueueList = memo(function QueueList({
               artistList={item.artistList}
               explicit={item.explicit}
               durationMs={item.durationMs}
+              titleBadge={item.smartShuffle ? <SmartShuffleBadge /> : undefined}
               coverUrl={
                 item.coverUrl ??
                 (item as { cover_url?: string }).cover_url ??
@@ -383,9 +385,10 @@ function RightDrawer({ onClose }: RightDrawerProps) {
       <RightDrawerHeader
         trackCount={player.queue.length}
         shuffle={player.shuffle}
+        smartShuffle={player.smartShuffle}
         repeat={player.repeat}
         canClear={player.queue.length > 1}
-        onShuffleToggle={() => playerEngine.setShuffle(!player.shuffle)}
+        onShuffleToggle={() => playerEngine.cycleShuffleMode()}
         onRepeatCycle={() =>
           playerEngine.setRepeat(
             nextRepeatMode(

@@ -364,6 +364,8 @@
     "clear_queue": "Svuota coda",
     "shuffle_on": "Riproduzione casuale attiva",
     "shuffle_off": "Riproduzione casuale disattivata",
+    "smart_shuffle_on": "Riproduzione casuale intelligente attiva",
+    "smart_shuffle_pick": "Aggiunto dalla riproduzione casuale intelligente",
     "save": "Salva",
     "home": "In sviluppo",
     "home_subtitle": "Usa la ricerca per ascoltare musica",

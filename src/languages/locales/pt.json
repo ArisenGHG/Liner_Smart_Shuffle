@@ -375,6 +375,8 @@
     "clear_queue": "Limpar fila",
     "shuffle_on": "Aleatório ativado",
     "shuffle_off": "Aleatório desativado",
+    "smart_shuffle_on": "Ordem aleatória inteligente ativada",
+    "smart_shuffle_pick": "Adicionada pela ordem aleatória inteligente",
     "save": "Salvar",
     "home": "Em desenvolvimento",
     "home_subtitle": "Use a pesquisa para ouvir música",

@@ -369,6 +369,8 @@
     "clear_queue": "Warteschlange leeren",
     "shuffle_on": "Zufallswiedergabe an",
     "shuffle_off": "Zufallswiedergabe aus",
+    "smart_shuffle_on": "Smart Shuffle an",
+    "smart_shuffle_pick": "Von Smart Shuffle hinzugefügt",
     "save": "Speichern",
     "home": "In Entwicklung",
     "home_subtitle": "Nutze die Suche, um Musik zu hören",

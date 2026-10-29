@@ -22,6 +22,8 @@ export interface Track {
   audioVariant?: TrackAudioVariant;
   releaseDate?: string;
   addedAt?: string;
+  /** mixed in by smart shuffle; dropped again when it is turned off */
+  smartShuffle?: boolean;
   album?: {
     id: string;
     title: string;

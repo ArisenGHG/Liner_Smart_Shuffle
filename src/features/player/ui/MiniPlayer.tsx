@@ -13,11 +13,15 @@ import {
   VolumeLoud,
   Repeat,
   RepeatOne,
-  Shuffle,
 } from "@solar-icons/react";
 import { HeartFill, HeartLine } from "@mingcute/react";
 
 import { PlayerMorphIcon, ICON_PLAY, ICON_PAUSE } from "./morphPlayerIcons";
+import {
+  ShuffleModeIcon,
+  SmartShuffleBadge,
+  shuffleModeLabel,
+} from "./ShuffleModeIcon";
 
 import { usePlayerState } from "../hooks/usePlayerState";
 import { playerEngine } from "../engine/playerEngine";
@@ -741,6 +745,9 @@ function MiniPlayer({
                 >
                   {trackTitle}
                 </span>
+                {currentTrack?.smartShuffle && (
+                  <SmartShuffleBadge className="pointer-events-auto" />
+                )}
               </p>
               <p
                 className="m-0 mt-[4px] flex min-w-0 items-center gap-[5px] text-[13px] font-[300] text-text-tertiary pointer-events-none"
@@ -798,18 +805,14 @@ function MiniPlayer({
               <button
                 type="button"
                 aria-label="Shuffle"
-                title={
-                  player.shuffle
-                    ? t("player.shuffle_on")
-                    : t("player.shuffle_off")
-                }
+                title={shuffleModeLabel(t, player.shuffle, player.smartShuffle)}
                 className={`${iconButtonClass} ${
                   player.shuffle ? activeToggleClass : ""
                 }`}
                 onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => playerEngine.setShuffle(!player.shuffle)}
+                onClick={() => playerEngine.cycleShuffleMode()}
               >
-                <Shuffle size={18} weight="Outline" />
+                <ShuffleModeIcon smart={player.smartShuffle} size={18} />
               </button>
               <button
                 type="button"
