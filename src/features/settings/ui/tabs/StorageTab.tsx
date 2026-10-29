@@ -370,7 +370,7 @@ export function StorageTab({
             transition={{ duration: 0.16, ease: "easeOut" }}
             className="flex-1 flex flex-col gap-[20px] pt-[8px] w-full"
           >
-            <div className="bg-bg-panel border border-border-primary/60 dark:border-transparent dark:bg-white/[0.035] pl-[10px] pr-[16px] py-[10px] rounded-2xl">
+            <div className="bg-black/[0.05] dark:bg-white/[0.07] pl-[10px] pr-[16px] py-[10px] rounded-2xl">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 w-full flex flex-col gap-0.5">
                   {analytics?.categories.map((cat) => {
@@ -514,7 +514,7 @@ export function StorageTab({
               </div>
             </div>
 
-            <div className="flex flex-col gap-[14px] bg-bg-panel border border-border-primary/60 dark:border-transparent dark:bg-white/[0.035] p-[16px] rounded-2xl">
+            <div className="flex flex-col gap-[14px] bg-black/[0.05] dark:bg-white/[0.07] p-[16px] rounded-2xl">
               <div className="pl-[6px]">
                 <h5 className="text-text-primary text-[13.5px] font-[600] m-0">
                   {t("settings.storage.cache_limit")}
