@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CheckFill, Magic2Fill, WarningFill } from "@mingcute/react";
 import { useTranslation } from "@/languages";
 import { cn, isWeakDevice } from "@/shared/lib";
-import { ISLAND_SURFACE } from "@/shared/ui";
 import { useFrameStrain } from "../hooks/useFrameStrain";
 import { VISUAL_MODES, useVisualModeStore } from "../store/visualModeStore";
 
@@ -54,9 +53,8 @@ export function BetaVisualsWarning({ docked }: BetaVisualsWarningProps) {
         aria-expanded={open}
         aria-label={t("player.beta_visuals.label")}
         className={cn(
-          ISLAND_SURFACE,
-          "group inline-flex h-[32px] cursor-pointer items-center border-none px-[8px] transition-colors",
-          warning ? "text-yellow-400" : "text-white/80 hover:text-white",
+          "group inline-flex h-[26px] min-w-[26px] cursor-pointer items-center justify-center rounded-md border-none bg-transparent px-[5px] transition-colors hover:bg-white/10",
+          warning ? "text-yellow-400" : "text-white/70 hover:text-white",
         )}
       >
         {warning && (

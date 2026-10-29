@@ -26,7 +26,7 @@ import {
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { cn } from "@/shared/lib";
-import WindowControls from "./WindowControls";
+import WindowControlsNotch from "./WindowControlsNotch";
 import RightDrawer from "./RightDrawer";
 import { FullscreenRouteContext } from "../fullscreenRouteContext";
 import DynamicBlurBackground from "./DynamicBlurBackground";
@@ -47,6 +47,7 @@ import {
   playerEngine,
   MiniPlayer,
   usePlayerStore,
+  useGlassBlur,
 } from "@/features/player";
 import SearchResultsList from "@/features/search/ui/SearchResultsList";
 import { SearchHistoryList, useSearchHistoryStore } from "@/features/search";
@@ -711,6 +712,7 @@ export default function AppFrame({ children }: AppFrameProps) {
           window.matchMedia?.("(prefers-color-scheme: dark)")?.matches));
   const hasPageBackdrop = useHasPageBackdrop();
   const classicSurfaces = useClassicSurfaces();
+  const glassBlur = useGlassBlur();
 
   return (
     <div
@@ -925,7 +927,6 @@ export default function AppFrame({ children }: AppFrameProps) {
                 }}
                 className="w-full flex-1 bg-transparent border-none outline-none text-text-primary text-[16px] placeholder:text-text-tertiary font-[400] tracking-tight"
                 style={{
-                  fontFamily: "var(--font-inter), sans-serif",
                   lineHeight: "1.2",
                 }}
               />
@@ -986,7 +987,6 @@ export default function AppFrame({ children }: AppFrameProps) {
                             }
                           `}
                           style={{
-                            fontFamily: "var(--font-inter), sans-serif",
                             lineHeight: "1.2",
                           }}
                         >
@@ -1021,20 +1021,10 @@ export default function AppFrame({ children }: AppFrameProps) {
                           transition={{ duration: 0.08 }}
                           className="flex h-full flex-col items-center justify-center gap-[6px] px-[20px] text-center"
                         >
-                          <p
-                            className="m-0 text-[14px] text-text-primary font-medium"
-                            style={{
-                              fontFamily: "var(--font-inter), sans-serif",
-                            }}
-                          >
+                          <p className="m-0 text-[14px] text-text-primary font-medium">
                             {t("common.no_results")}
                           </p>
-                          <p
-                            className="m-0 text-[12px] text-text-tertiary"
-                            style={{
-                              fontFamily: "var(--font-inter), sans-serif",
-                            }}
-                          >
+                          <p className="m-0 text-[12px] text-text-tertiary">
                             {t("common.try_another_search")}
                           </p>
                         </motion.div>
@@ -1094,20 +1084,14 @@ export default function AppFrame({ children }: AppFrameProps) {
       </AnimatePresence>
 
       <AppOverlays />
-      <AnimatePresence>
-        {isFullscreenPlayer && (
-          <motion.div
-            key="fullscreen-window-controls"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-[6px] right-[6px] z-[80] pointer-events-auto select-none"
-          >
-            <WindowControls isFullscreen embedded />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isFullscreenPlayer && (
+        <div
+          data-theme="dark"
+          className="dark absolute top-1.5 right-1.5 z-[80]"
+        >
+          <WindowControlsNotch tone="glass" blur={glassBlur} />
+        </div>
+      )}
     </div>
   );
 }
