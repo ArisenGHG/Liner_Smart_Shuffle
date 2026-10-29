@@ -11,7 +11,6 @@ import { useMostSaved, usePopularAlbums } from "../hooks/useExploreCollections";
 import { useTranslation } from "@/languages";
 import { usePageBackdrop } from "@/shared/lib";
 import { useHomeBackdrop } from "../hooks/useHomeBackdrop";
-import { usePlayerStore } from "@/features/player";
 import {
   AlbumFill,
   BookmarkFill,
@@ -36,16 +35,12 @@ export default function HomePage() {
   const firstAlbumCover =
     firstAlbum?.type === "album" ? firstAlbum.item.coverUrl : undefined;
   const homeBackdrop = useHomeBackdrop(dailyMixes);
-  const currentTrackCover = usePlayerStore(
-    (state) => state.currentTrack?.coverUrl,
-  );
-  const usesMixBackdrop = !currentTrackCover && (hasMixes || mixesLoading);
+  const usesMixBackdrop = hasMixes || mixesLoading;
   usePageBackdrop(
-    currentTrackCover ||
-      (usesMixBackdrop
-        ? homeBackdrop.backdrop
-        : firstAlbumCover || listeningNow[0]?.coverUrl || undefined),
-    currentTrackCover || usesMixBackdrop ? { blur: 56, dim: 0.22 } : undefined,
+    usesMixBackdrop
+      ? homeBackdrop.backdrop
+      : firstAlbumCover || listeningNow[0]?.coverUrl || undefined,
+    usesMixBackdrop ? { blur: 56, dim: 0.22 } : undefined,
   );
 
   const hasMixesSlot = hasMixes || mixesLoading;
