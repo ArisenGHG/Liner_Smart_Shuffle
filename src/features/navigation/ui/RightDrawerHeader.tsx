@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { LeftLine } from "@mingcute/react";
-import { Repeat, RepeatOne, Shuffle, TrashBin2 } from "@solar-icons/react";
+import { Repeat, RepeatOne, TrashBin2 } from "@solar-icons/react";
+import {
+  ShuffleModeIcon,
+  shuffleModeLabel,
+} from "@/features/player/ui/ShuffleModeIcon";
 import { useTranslation } from "@/languages";
 import { Tooltip } from "@/shared/ui";
 import { cn } from "@/shared/lib";
@@ -9,6 +13,7 @@ import type { RepeatMode } from "@/features/player";
 export interface RightDrawerHeaderProps {
   trackCount: number;
   shuffle: boolean;
+  smartShuffle: boolean;
   repeat: RepeatMode;
   canClear: boolean;
   onShuffleToggle: () => void;
@@ -56,6 +61,7 @@ function QueueAction({
 export function RightDrawerHeader({
   trackCount,
   shuffle,
+  smartShuffle,
   repeat,
   canClear,
   onShuffleToggle,
@@ -94,11 +100,11 @@ export function RightDrawerHeader({
 
       <div className="flex h-[40px] shrink-0 items-center gap-[2px] rounded-[10px] bg-white/[0.1] p-[4px]">
         <QueueAction
-          label={shuffle ? t("player.shuffle_on") : t("player.shuffle_off")}
+          label={shuffleModeLabel(t, shuffle, smartShuffle)}
           active={shuffle}
           onClick={onShuffleToggle}
         >
-          <Shuffle size={18} weight="Outline" />
+          <ShuffleModeIcon smart={smartShuffle} size={18} />
         </QueueAction>
         <QueueAction
           label={t(`player.repeat_${repeat}`)}
