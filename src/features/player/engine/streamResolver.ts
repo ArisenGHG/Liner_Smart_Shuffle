@@ -14,6 +14,7 @@ import { resolveLinerStream } from "@/shared/media/liner/linerPlayback";
 import { isLocalTrackId, localTrackAudioUrl } from "@/shared/media/local";
 import { isAbortError } from "@/shared/utils/abort";
 import { log } from "@/shared/utils/logger";
+import { rememberStreamOrigin } from "./nowPlayingLog";
 import {
   fromInnertubeStream,
   fromLinerStream,
@@ -57,7 +58,7 @@ async function resolveYoutubeAudio(
   if (isYoutubeSignedIn() && prefersAccountPlayback()) {
     try {
       const stream = await resolveTvAudio(videoId, progressive, signal);
-      log("cyan", "playback", `playing youtube tv audio for ${videoId}`);
+      log("cyan", "playback", `resolved youtube tv audio for ${videoId}`);
       return stream;
     } catch (error) {
       if (isAbortError(error, signal)) throw error;
@@ -79,9 +80,11 @@ async function resolveYoutubeStandIn(
   log(
     "cyan",
     "playback",
-    `playing youtube stand-in ${videoId} for "${track.title}"`,
+    `resolved youtube stand-in ${videoId} for "${track.title}"`,
   );
-  return resolveYoutubeAudio(videoId, progressive, signal);
+  const stream = await resolveYoutubeAudio(videoId, progressive, signal);
+  stream.standIn = true;
+  return stream;
 }
 
 async function resolveSoundCloud(
@@ -127,7 +130,7 @@ async function resolveYoutubeTrack(
   const videoId = songId ?? rowVideoId;
   const liner = await resolveLinerStream(videoId, signal);
   if (liner) {
-    log("cyan", "playback", `playing liner audio (r2) for "${track.title}"`);
+    log("cyan", "playback", `resolved liner audio (r2) for "${track.title}"`);
     return fromLinerStream(liner, track);
   }
   return resolveYoutubeAudio(videoId, progressive, signal);
@@ -138,10 +141,21 @@ export async function resolvePlaybackStream(
   signal?: AbortSignal,
   options: ResolveStreamOptions = {},
 ): Promise<PlaybackStream> {
+  const stream = await resolveStream(track, signal, options);
+  rememberStreamOrigin(track.id, stream);
+  return stream;
+}
+
+async function resolveStream(
+  track: PlayableTrack,
+  signal?: AbortSignal,
+  options: ResolveStreamOptions = {},
+): Promise<PlaybackStream> {
   const progressive = options.progressive ?? false;
   if (isLocalTrackId(track.id))
     return {
       url: localTrackAudioUrl(track.id),
+      source: "local",
       expiresAtMs: null,
       mimeType: "",
       codec: "local",
