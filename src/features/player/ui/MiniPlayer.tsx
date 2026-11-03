@@ -18,6 +18,8 @@ import {
 import { HeartFill, HeartLine } from "@mingcute/react";
 
 import { PlayerMorphIcon, ICON_PLAY, ICON_PAUSE } from "./morphPlayerIcons";
+import { playlistStatusLabel } from "./playlistStatus";
+import { PlaylistAddIcon } from "./PlaylistAddIcon";
 
 import { usePlayerState } from "../hooks/usePlayerState";
 import { playerEngine } from "../engine/playerEngine";
@@ -26,6 +28,7 @@ import { useTranslation } from "@/languages";
 import {
   useIsTrackLiked,
   useLikeTrack,
+  usePlaylistsContainingTrack,
   useUnlikeTrack,
 } from "@/features/library/hooks";
 import { usePlayerStore } from "../store/playerStore";
@@ -46,6 +49,7 @@ import { useSongMenuItems } from "../hooks/useSongMenuItems";
 const PROGRESS_STEP_MS = 1000;
 const PROGRESS_JUMP_TRANSITION =
   "transform 380ms cubic-bezier(0.22, 1, 0.36, 1)";
+import { useModalStore } from "@/features/library/store/modalStore";
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
@@ -334,6 +338,20 @@ function MiniPlayer({
       likeMutation.mutate(currentTrack.id, { onSettled });
     }
   }, [currentTrack, isLiked, likeMutation, unlikeMutation]);
+
+  const inPlaylists = usePlaylistsContainingTrack(currentTrack?.id);
+  const addToPlaylistLabel = playlistStatusLabel(t, inPlaylists);
+
+  const handleAddToPlaylist = useCallback(() => {
+    if (!currentTrack) return;
+    useModalStore.getState().openAddToPlaylist({
+      id: currentTrack.id,
+      title: currentTrack.title,
+      artists: currentTrack.artists,
+      coverUrl: currentTrack.coverUrl,
+      durationMs: currentTrack.durationMs,
+    });
+  }, [currentTrack]);
 
   const durationMs =
     player.durationMs > 0
@@ -855,6 +873,24 @@ function MiniPlayer({
                 style={{ cursor: "pointer" }}
               >
                 {isLiked ? <HeartFill size={20} /> : <HeartLine size={20} />}
+              </button>
+            )}
+            {!isLocal && (
+              <button
+                type="button"
+                aria-label={addToPlaylistLabel}
+                title={addToPlaylistLabel}
+                disabled={!currentTrack}
+                className={`${iconButtonClass} -ml-[6px] shrink-0 transition-colors duration-150 pointer-events-auto prevent-seek disabled:opacity-40 ${
+                  inPlaylists.length > 0
+                    ? "text-accent-primary"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleAddToPlaylist}
+                style={{ cursor: "pointer" }}
+              >
+                <PlaylistAddIcon added={inPlaylists.length > 0} size={20} />
               </button>
             )}
           </div>

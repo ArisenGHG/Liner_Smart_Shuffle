@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   api,
   getAuthSession,
@@ -270,6 +270,89 @@ function rememberCovers(
   writeCoverCache(coverCache);
 }
 
+// which songs each playlist holds, for "is this song already in a playlist".
+// kept apart from the list load so that stays a single request; filled lazily
+// and stored per playlist revision (updatedAt) so it is fetched again only
+// after the playlist changes
+const MEMBERSHIP_KEY = "liner:playlist-track-ids-v1";
+type MembershipEntry = { updatedAt: string; trackIds: string[] };
+let membership: Record<string, MembershipEntry> = readMembership();
+let membershipRequest: Promise<void> | null = null;
+const membershipListeners = new Set<() => void>();
+
+function readMembership(): Record<string, MembershipEntry> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(MEMBERSHIP_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function rememberTrackIds(id: string, updatedAt: string, trackIds: string[]) {
+  membership = { ...membership, [id]: { updatedAt, trackIds } };
+  try {
+    localStorage.setItem(MEMBERSHIP_KEY, JSON.stringify(membership));
+  } catch {}
+  membershipListeners.forEach((l) => l());
+}
+
+function subscribeMembership(listener: () => void) {
+  membershipListeners.add(listener);
+  return () => membershipListeners.delete(listener);
+}
+
+function loadMissingMembership(
+  playlists: LibraryPlaylistSummary[],
+): Promise<void> {
+  if (membershipRequest) return membershipRequest;
+  const stale = playlists.filter(
+    (p) => membership[p.id]?.updatedAt !== p.updatedAt,
+  );
+  if (stale.length === 0) return Promise.resolve();
+  membershipRequest = (async () => {
+    // one at a time: this runs in the background and must not crowd out playback
+    for (const playlist of stale) {
+      try {
+        const response = await api.readUserPlaylist(playlist.id);
+        if (response.notModified) continue;
+        rememberTrackIds(
+          playlist.id,
+          response.playlist.updatedAt,
+          response.items.map((item) => toClientTrack(item.track).id),
+        );
+      } catch {}
+    }
+  })().finally(() => {
+    membershipRequest = null;
+  });
+  return membershipRequest;
+}
+
+/** the user's playlists that already contain this track */
+export function usePlaylistsContainingTrack(
+  trackId: string | null | undefined,
+): LibraryPlaylistSummary[] {
+  const { data } = usePlaylistsList();
+  const known = useSyncExternalStore(
+    subscribeMembership,
+    () => membership,
+    () => membership,
+  );
+
+  useEffect(() => {
+    void loadMissingMembership(data.playlists);
+  }, [data.playlists]);
+
+  return useMemo(
+    () =>
+      trackId
+        ? data.playlists.filter((p) => known[p.id]?.trackIds.includes(trackId))
+        : [],
+    [data.playlists, trackId, known],
+  );
+}
+
 export function usePlaylist(id: string | null) {
   const cacheKey = id ? `playlist:detail:${id}` : null;
   const cached = cacheKey
@@ -338,6 +421,11 @@ export function usePlaylist(id: string | null) {
           false,
         );
         rememberCovers(id, detail, response.playlist.updatedAt);
+        rememberTrackIds(
+          id,
+          response.playlist.updatedAt,
+          detail.tracks.map((track) => track.id),
+        );
         queryCache.set(cacheKey, detail);
         if (response.etag) queryCache.set(etagKey, response.etag);
         else queryCache.delete(etagKey);
