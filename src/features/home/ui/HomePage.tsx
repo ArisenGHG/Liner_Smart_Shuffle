@@ -5,6 +5,7 @@ import HomePageSkeleton, { MixesSectionSkeleton } from "./HomePageSkeleton";
 import { usePopularTracksAllTime } from "../hooks/usePopularTracks";
 import { useListeningNow } from "../hooks/useListeningNow";
 import ListeningNowSection from "./ListeningNowSection";
+import LastListenedGrid, { LastListenedIcon } from "./LastListenedGrid";
 import { useRecentlyPlayed } from "../hooks/useRecentlyPlayed";
 import { useDailyMixes } from "../hooks/useDailyMixes";
 import { useMostSaved, usePopularAlbums } from "../hooks/useExploreCollections";
@@ -31,12 +32,16 @@ function HomeFeed({ onRetry }: { onRetry: () => void }) {
   const { tracks: listeningNow, isLoading: tracksLoading } = useListeningNow();
   const { data: popularTracksAllTime, isLoading: allTimeLoading } =
     usePopularTracksAllTime(20);
-  const { data: recentlyPlayed, isLoading: recentLoading } =
-    useRecentlyPlayed(20);
+  const {
+    data: recentlyPlayed,
+    lastListened,
+    isLoading: recentLoading,
+  } = useRecentlyPlayed(20);
   const { items: popularAlbums, isLoading: albumsLoading } = usePopularAlbums();
   const { items: mostSaved, isLoading: savedLoading } = useMostSaved();
   const { data: dailyMixes, isLoading: mixesLoading } = useDailyMixes();
   const hasMixes = dailyMixes.length > 0;
+  const hasLastListened = lastListened.length > 0;
   const firstAlbum = popularAlbums[0];
   const firstAlbumCover =
     firstAlbum?.type === "album" ? firstAlbum.item.coverUrl : undefined;
@@ -100,6 +105,15 @@ function HomeFeed({ onRetry }: { onRetry: () => void }) {
 
         {isReady && !nothingLoaded && (
           <div className="col-start-1 row-start-1 w-full pb-[16px]">
+            {hasLastListened && (
+              <LastListenedGrid
+                title={t("home.lastListened")}
+                icon={<LastListenedIcon />}
+                items={lastListened}
+                headingMarginTop="mt-0"
+              />
+            )}
+
             {mixesLoading ? (
               <MixesSectionSkeleton />
             ) : (
@@ -107,7 +121,7 @@ function HomeFeed({ onRetry }: { onRetry: () => void }) {
                 <div style={{ animation: "page-enter 200ms ease-out" }}>
                   <DailyMixesSection
                     mixes={dailyMixes}
-                    headingMarginTop="mt-0"
+                    headingMarginTop={hasLastListened ? "mt-[22px]" : "mt-0"}
                     accentCoverUrl={homeBackdrop.cover}
                   />
                 </div>
@@ -119,7 +133,9 @@ function HomeFeed({ onRetry }: { onRetry: () => void }) {
                 title={t("home.popularAlbums")}
                 icon={<AlbumFill />}
                 items={popularAlbums}
-                headingMarginTop={hasMixesSlot ? "mt-[22px]" : "mt-0"}
+                headingMarginTop={
+                  hasMixesSlot || hasLastListened ? "mt-[22px]" : "mt-0"
+                }
               />
             )}
 
@@ -129,7 +145,7 @@ function HomeFeed({ onRetry }: { onRetry: () => void }) {
                 icon={<FireFill />}
                 tracks={listeningNow}
                 headingMarginTop={
-                  hasMixesSlot || popularAlbums.length > 0
+                  hasMixesSlot || hasLastListened || popularAlbums.length > 0
                     ? "mt-[22px]"
                     : "mt-0"
                 }
