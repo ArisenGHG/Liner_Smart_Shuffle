@@ -23,6 +23,7 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
   const location = useLocation();
   const track = usePlayerStore((s) => s.currentTrack);
   const glassBlur = useGlassBlur();
+  const isPlaying = usePlayerStore((s) => s.status === "playing");
 
   const isLocal = isLocalTrackId(track?.id);
   const isLiked = useIsTrackLiked(track?.id);
@@ -48,6 +49,8 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
       <div className="flex min-w-0 flex-1 flex-col gap-[4px]">
         <ScrollableText
           text={track?.title || ""}
+          marquee
+          marqueeRunning={isPlaying}
           className="font-montserrat m-0 text-[20px] font-[600] leading-[1.2] tracking-[-0.01em] text-white"
         />
         <p className="font-montserrat m-0 flex min-w-0 items-center gap-[6px] text-label font-[500] text-white/70 leading-snug">
@@ -79,7 +82,9 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
             onNavigate={() => {
               if (location.pathname !== "/player") onClose?.();
             }}
-            className="truncate text-white/70"
+            className="text-white/70"
+            marquee
+            marqueeRunning={isPlaying}
           />
         </p>
       </div>

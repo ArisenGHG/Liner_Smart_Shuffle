@@ -46,6 +46,7 @@ import { useSongMenuItems } from "../hooks/useSongMenuItems";
 const PROGRESS_STEP_MS = 1000;
 const PROGRESS_JUMP_TRANSITION =
   "transform 380ms cubic-bezier(0.22, 1, 0.36, 1)";
+import ScrollableText from "@/shared/ui/ScrollableText";
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
   r /= 255;
@@ -799,7 +800,7 @@ function MiniPlayer({
                   role="button"
                   tabIndex={0}
                   aria-label="Open player"
-                  className="min-w-0 truncate cursor-pointer pointer-events-auto prevent-seek"
+                  className="min-w-0 cursor-pointer pointer-events-auto prevent-seek"
                   onClick={onFullscreenOpen}
                   onPointerDown={(e) => e.stopPropagation()}
                   onKeyDown={(e) => {
@@ -809,7 +810,11 @@ function MiniPlayer({
                     }
                   }}
                 >
-                  {trackTitle}
+                  <ScrollableText
+                    text={trackTitle}
+                    marquee
+                    marqueeRunning={isPlaying}
+                  />
                 </span>
               </p>
               <p
@@ -838,6 +843,8 @@ function MiniPlayer({
                   artistList={player.currentTrack?.artistList}
                   plain={isLocal}
                   className="text-text-tertiary pointer-events-auto"
+                  marquee
+                  marqueeRunning={isPlaying}
                 />
               </p>
             </div>
