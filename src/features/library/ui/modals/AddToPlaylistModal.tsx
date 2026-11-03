@@ -4,6 +4,7 @@ import {
   Search2Line,
   CloseCircleFill,
   AddLine,
+  CheckLine,
 } from "@mingcute/react";
 import { useToast } from "@/shared/ui";
 import { ApiError } from "@/shared/api";
@@ -12,7 +13,11 @@ import Dialog from "@/shared/ui/Dialog";
 import { DialogActions, DialogButton } from "@/shared/ui";
 import CoverImage from "@/features/covers/ui/CoverImage";
 import { useTranslation } from "@/languages";
-import { useAddPlaylistTracks, usePlaylistsList } from "../../hooks";
+import {
+  useAddPlaylistTracks,
+  usePlaylistsContainingTrack,
+  usePlaylistsList,
+} from "../../hooks";
 import { useModalStore } from "../../store/modalStore";
 
 export default function AddToPlaylistModal() {
@@ -33,6 +38,11 @@ export default function AddToPlaylistModal() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: playlistData } = usePlaylistsList();
   const addTrack = useAddPlaylistTracks();
+  const containing = usePlaylistsContainingTrack(track?.id);
+  const containingIds = useMemo(
+    () => new Set(containing.map((p) => p.id)),
+    [containing],
+  );
 
   const rawPlaylists = useMemo(
     () => track?.playlists ?? playlistData?.playlists ?? [],
@@ -187,46 +197,58 @@ export default function AddToPlaylistModal() {
           className="flex flex-col gap-[2px] max-h-[300px] overflow-y-auto"
         >
           {playlists.length > 0 ? (
-            playlists.map((playlist) => (
-              <button
-                key={playlist.id}
-                type="button"
-                disabled={addingTo !== null}
-                onClick={() => handleAddToPlaylist(playlist.id)}
-                className="flex items-center gap-[12px] p-[8px] rounded-control transition-colors hover:bg-bg-elevated active:bg-border-alpha-14 text-left group w-full border-none bg-transparent cursor-pointer disabled:opacity-50"
-              >
-                <div className="relative h-[44px] w-[44px] rounded-lg bg-bg-elevated overflow-hidden shrink-0 flex items-center justify-center">
-                  {playlist.coverUrl ? (
-                    <CoverImage
-                      src={playlist.coverUrl}
-                      alt={playlist.title}
-                      fill
-                      sizes="44px"
-                      className="object-cover"
-                    />
+            playlists.map((playlist) => {
+              const alreadyAdded = containingIds.has(playlist.id);
+              return (
+                <button
+                  key={playlist.id}
+                  type="button"
+                  disabled={addingTo !== null || alreadyAdded}
+                  onClick={() => handleAddToPlaylist(playlist.id)}
+                  className={`flex items-center gap-[12px] p-[8px] rounded-control transition-colors text-left group w-full border-none bg-transparent ${
+                    alreadyAdded
+                      ? "cursor-default"
+                      : "cursor-pointer hover:bg-bg-elevated active:bg-border-alpha-14 disabled:opacity-50"
+                  }`}
+                >
+                  <div className="relative h-[44px] w-[44px] rounded-lg bg-bg-elevated overflow-hidden shrink-0 flex items-center justify-center">
+                    {playlist.coverUrl ? (
+                      <CoverImage
+                        src={playlist.coverUrl}
+                        alt={playlist.title}
+                        fill
+                        sizes="44px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <PlaylistFill size={20} className="text-text-tertiary" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-[1px] min-w-0 flex-1">
+                    <span className="text-body font-[500] text-text-primary truncate">
+                      {playlist.title}
+                    </span>
+                    <span className="text-caption text-text-tertiary tabular-nums">
+                      {t("common.tracks", { count: playlist.trackCount })}
+                    </span>
+                  </div>
+
+                  {addingTo === playlist.id ? (
+                    <span className="h-[14px] w-[14px] animate-spin rounded-full border-[2px] border-text-tertiary border-t-text-primary shrink-0" />
+                  ) : alreadyAdded ? (
+                    <span className="flex shrink-0 items-center gap-[4px] text-caption font-[500] text-accent-primary">
+                      <CheckLine size={16} />
+                      {t("common.already_added")}
+                    </span>
                   ) : (
-                    <PlaylistFill size={20} className="text-text-tertiary" />
+                    <span className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors group-hover:bg-border-alpha-14 group-hover:text-text-primary">
+                      <AddLine size={18} />
+                    </span>
                   )}
-                </div>
-
-                <div className="flex flex-col gap-[1px] min-w-0 flex-1">
-                  <span className="text-body font-[500] text-text-primary truncate">
-                    {playlist.title}
-                  </span>
-                  <span className="text-caption text-text-tertiary tabular-nums">
-                    {t("common.tracks", { count: playlist.trackCount })}
-                  </span>
-                </div>
-
-                {addingTo === playlist.id ? (
-                  <span className="h-[14px] w-[14px] animate-spin rounded-full border-[2px] border-text-tertiary border-t-text-primary shrink-0" />
-                ) : (
-                  <span className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full text-text-tertiary transition-colors group-hover:bg-border-alpha-14 group-hover:text-text-primary">
-                    <AddLine size={18} />
-                  </span>
-                )}
-              </button>
-            ))
+                </button>
+              );
+            })
           ) : (
             <div className="mx-[8px] flex flex-col items-center gap-[8px] rounded-control bg-bg-elevated/60 px-[12px] py-[24px] text-center">
               <span className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-bg-elevated text-text-tertiary">

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import {
   useIsTrackLiked,
   useLikeTrack,
+  usePlaylistsContainingTrack,
   useUnlikeTrack,
 } from "@/features/library/hooks";
 import { ArtistAvatar, ArtistLink } from "@/features/artist";
@@ -13,6 +14,9 @@ import { usePlayerStore } from "../store/playerStore";
 import { useGlassBlur } from "../store/visualModeStore";
 import { cn } from "@/shared/lib";
 import { SmartShuffleBadge } from "./ShuffleModeIcon";
+import { useModalStore } from "@/features/library/store/modalStore";
+import { playlistStatusLabel } from "./playlistStatus";
+import { PlaylistAddIcon } from "./PlaylistAddIcon";
 import { LikeMorphIcon } from "./LikeMorphIcon";
 
 interface FullscreenTrackInfoProps {
@@ -44,6 +48,20 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
       likeMutation.mutate(track.id, { onSettled });
     }
   }, [track, isLiked, likeMutation, unlikeMutation]);
+
+  const inPlaylists = usePlaylistsContainingTrack(track?.id);
+  const addToPlaylistLabel = playlistStatusLabel(t, inPlaylists);
+
+  const handleAddToPlaylist = useCallback(() => {
+    if (!track) return;
+    useModalStore.getState().openAddToPlaylist({
+      id: track.id,
+      title: track.title,
+      artists: track.artists,
+      coverUrl: track.coverUrl,
+      durationMs: track.durationMs,
+    });
+  }, [track]);
 
   return (
     <div className="flex w-full items-center gap-[12px]">
@@ -92,6 +110,23 @@ export function FullscreenTrackInfo({ onClose }: FullscreenTrackInfoProps) {
           />
         </p>
       </div>
+
+      {!isLocal && (
+        <button
+          type="button"
+          aria-label={addToPlaylistLabel}
+          title={addToPlaylistLabel}
+          disabled={!track}
+          onClick={handleAddToPlaylist}
+          className={cn(
+            "relative inline-flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-[11px] border-none bg-white/[0.06] cursor-pointer transition-colors duration-200 ease-out hover:bg-white/[0.12] active:scale-[0.92] disabled:opacity-40",
+            inPlaylists.length > 0 ? "text-accent-primary" : "text-white",
+            glassBlur && "backdrop-blur-xl backdrop-brightness-[1.15]",
+          )}
+        >
+          <PlaylistAddIcon added={inPlaylists.length > 0} size={21} />
+        </button>
+      )}
 
       {!isLocal && (
         <button
