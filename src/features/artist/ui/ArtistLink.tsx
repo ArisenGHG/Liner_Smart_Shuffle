@@ -70,6 +70,11 @@ function ArtistName({
     </span>
   );
 }
+import {
+  MARQUEE_GAP_PX,
+  OVERFLOW_MASK,
+  marqueeStyles,
+} from "@/shared/lib/marquee";
 
 export interface ArtistLinkProps {
   name?: string;
@@ -80,6 +85,10 @@ export interface ArtistLinkProps {
   separator?: string;
   onNavigate?: () => void;
   plain?: boolean;
+  /** scroll right to left in a loop while the names overflow, not only on hover */
+  marquee?: boolean;
+  /** with `marquee`: only loop while this is true (e.g. while the song plays) */
+  marqueeRunning?: boolean;
 }
 
 export default function ArtistLink({
@@ -91,17 +100,21 @@ export default function ArtistLink({
   separator = ", ",
   onNavigate,
   plain = false,
+  marquee = false,
+  marqueeRunning = true,
 }: ArtistLinkProps) {
   const offline = useOfflineModeStore((state) => state.offline);
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const [delta, setDelta] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
   const [hovered, setHovered] = useState(false);
 
   const measure = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
     const diff = innerRef.current.scrollWidth - outerRef.current.clientWidth;
     setDelta(Math.max(0, diff));
+    setContentWidth(innerRef.current.offsetWidth);
   }, []);
 
   useLayoutEffect(() => {
@@ -168,23 +181,29 @@ export default function ArtistLink({
     }
   }
 
-  const maskStyle =
-    delta > 0
-      ? {
-          maskImage: hovered
-            ? "linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 14px), transparent 100%)"
-            : "linear-gradient(to right, black 0px, black calc(100% - 14px), transparent 100%)",
-          WebkitMaskImage: hovered
-            ? "linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 14px), transparent 100%)"
-            : "linear-gradient(to right, black 0px, black calc(100% - 14px), transparent 100%)",
-          transition: "mask-image 200ms ease, -webkit-mask-image 200ms ease",
-        }
+  const isLooping = marquee && marqueeRunning && delta > 0;
+  const loopStyle = isLooping ? marqueeStyles(contentWidth) : null;
+  const maskStyle = loopStyle
+    ? loopStyle.host
+    : delta > 0
+      ? hovered
+        ? {
+            maskImage:
+              "linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 14px), transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0px, black 12px, black calc(100% - 14px), transparent 100%)",
+            transition: "mask-image 200ms ease, -webkit-mask-image 200ms ease",
+          }
+        : {
+            ...OVERFLOW_MASK,
+            transition: "mask-image 200ms ease, -webkit-mask-image 200ms ease",
+          }
       : undefined;
 
   return (
     <span
       ref={outerRef}
-      className={`relative inline-flex items-center min-w-0 max-w-full overflow-hidden text-left ${className}`}
+      className={`relative inline-flex items-center min-w-0 max-w-full overflow-hidden text-left ${isLooping ? "marquee-host" : ""} ${className}`}
       style={maskStyle}
 
       onMouseEnter={() => {
@@ -194,19 +213,33 @@ export default function ArtistLink({
       onMouseLeave={() => setHovered(false)}
     >
       <span
-        ref={innerRef}
-        className="inline-flex items-center whitespace-nowrap flex-nowrap shrink-0"
-        style={{
-          transform:
-            hovered && delta > 0
-              ? `translateX(-${delta + 6}px)`
-              : "translateX(0)",
-          transition: hovered
-            ? `transform ${Math.max(800, delta * 14)}ms linear`
-            : "transform 300ms ease",
-        }}
+        key={isLooping ? "loop" : "static"}
+        className={`inline-flex items-center whitespace-nowrap flex-nowrap shrink-0 ${isLooping ? "marquee-track" : ""}`}
+        style={
+          loopStyle?.track ?? {
+            transform:
+              hovered && delta > 0
+                ? `translateX(-${delta + 6}px)`
+                : "translateX(0)",
+            transition: hovered
+              ? `transform ${Math.max(800, delta * 14)}ms linear`
+              : "transform 300ms ease",
+          }
+        }
       >
-        {innerContent}
+        <span ref={innerRef} className="inline-flex items-center shrink-0">
+          {innerContent}
+        </span>
+        {isLooping && (
+          <span
+            aria-hidden="true"
+            inert
+            className="inline-flex items-center shrink-0"
+            style={{ paddingLeft: MARQUEE_GAP_PX }}
+          >
+            {innerContent}
+          </span>
+        )}
       </span>
     </span>
   );

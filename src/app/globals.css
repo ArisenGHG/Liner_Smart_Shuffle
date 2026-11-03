@@ -472,6 +472,32 @@ button.apple-glass-action:hover,
   cursor: default;
 }
 
+/* scrolls overflowing text right to left; the track holds a trailing copy of
+   the text, so each loop ends exactly where it started (rest share: marquee.ts) */
+@keyframes marquee-loop {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(var(--marquee-distance));
+  }
+}
+
+.marquee-track {
+  animation: marquee-loop var(--marquee-duration) linear infinite;
+}
+
+.marquee-host:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
 @keyframes skeleton-breathe {
   0%,
   100% {
