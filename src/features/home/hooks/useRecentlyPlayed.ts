@@ -119,7 +119,7 @@ usePlayerStore.subscribe((state) => {
   }
   lastRecordedId = track.id;
   const item = toLastListenedItem(
-    track,
+    { ...track, smartShuffle: undefined },
     parseContextString(state.playbackContext),
     state.playbackContextCover,
   );
